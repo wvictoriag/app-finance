@@ -15,17 +15,31 @@ export default function Login() {
     const [viewMode, setViewMode] = useState(email ? 'account' : 'full');
     const [connectionStatus, setConnectionStatus] = useState('checking'); // 'checking', 'online', 'offline'
 
+    const [newPassword, setNewPassword] = useState('');
+
     useEffect(() => {
-        if (user) {
+        // Detect recovery event
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                setViewMode('reset-password');
+                toast.success('Por favor, ingresa tu nueva contraseña');
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        // Only redirect if we are NOT in reset-password mode
+        if (user && viewMode !== 'reset-password') {
             navigate('/');
         }
         checkConnection();
-    }, [user, navigate]);
+    }, [user, navigate, viewMode]);
 
     const checkConnection = async () => {
         try {
             const { error } = await supabase.from('_non_existent_table_').select('count').limit(1);
-            // If we get an error that isn't a network error (like table doesn't exist), we are online
             if (error && error.message === 'Failed to fetch') {
                 setConnectionStatus('offline');
             } else {
@@ -75,6 +89,24 @@ export default function Login() {
         }
     };
 
+    const handleUpdatePassword = async (e) => {
+        e.preventDefault();
+        if (newPassword.length < 6) return toast.error('La contraseña debe tener al menos 6 caracteres');
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+            if (error) throw error;
+            toast.success('¡Contraseña actualizada con éxito!');
+            navigate('/');
+        } catch (error) {
+            toast.error('Error al actualizar: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 font-sans relative overflow-hidden">
             {/* Background decorative elements */}
@@ -90,6 +122,38 @@ export default function Login() {
                     <h2 className="text-3xl font-black text-white tracking-tighter uppercase mb-2">Guapacha</h2>
                     <p className="text-xs font-bold text-indigo-400 uppercase tracking-[0.3em]">Intelligence Dashboard</p>
                 </div>
+
+                {/* Reset Password View */}
+                {viewMode === 'reset-password' && (
+                    <form onSubmit={handleUpdatePassword} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="text-center mb-4">
+                            <h3 className="text-xl font-bold text-white mb-2">Nueva Contraseña</h3>
+                            <p className="text-sm text-slate-400">Por favor, elige tu nueva clave de acceso.</p>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Nueva Contraseña</label>
+                            <div className="relative group">
+                                <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                <input
+                                    type="password"
+                                    placeholder="Mínimo 6 caracteres"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="w-full bg-white border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-900 text-lg placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
+                                    required
+                                    autoFocus
+                                />
+                            </div>
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl shadow-2xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-3 disabled:opacity-50 text-lg uppercase tracking-widest"
+                        >
+                            {loading ? <Loader2 className="animate-spin" size={24} /> : 'Guardar y Entrar'}
+                        </button>
+                    </form>
+                )}
 
                 {/* Account Selection View */}
                 {viewMode === 'account' && (

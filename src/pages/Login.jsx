@@ -55,20 +55,17 @@ export default function Login() {
         }
     };
 
-    const handleMagicLink = async () => {
-        if (!email) return toast.error('Ingresa un correo primero');
+    const handleForgotPassword = async () => {
+        if (!email) return toast.error('Ingresa tu correo electrónico para enviarte el enlace');
         setLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                options: {
-                    emailRedirectTo: window.location.origin,
-                },
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/login`,
             });
             if (error) throw error;
-            toast.success('Link enviado! Revisa tu correo.');
+            toast.success('Se ha enviado un enlace de recuperación a tu correo');
         } catch (error) {
-            toast.error('Error al enviar el link: ' + error.message);
+            toast.error('Error: ' + error.message);
         } finally {
             setLoading(false);
         }
@@ -80,14 +77,14 @@ export default function Login() {
             <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent"></div>
             <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
 
-            <div className="max-w-md w-full glass-panel p-10 relative z-10 border-white/5 shadow-2xl overflow-hidden">
+            <div className="max-w-md w-full glass-panel p-8 md:p-10 relative z-10 border-white/10 shadow-2xl overflow-hidden rounded-3xl">
                 {/* Header */}
                 <div className="text-center mb-10">
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 mx-auto mb-6">
-                        <TrendingUp size={32} className="text-white" />
+                    <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/40 mx-auto mb-6">
+                        <TrendingUp size={40} className="text-white" />
                     </div>
-                    <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Guapacha Finance</h2>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">Intelligence Dashboard</p>
+                    <h2 className="text-3xl font-black text-white tracking-tighter uppercase mb-2">Guapacha</h2>
+                    <p className="text-xs font-bold text-indigo-400 uppercase tracking-[0.3em]">Intelligence Dashboard</p>
                 </div>
 
                 {/* Account Selection View */}
@@ -95,115 +92,131 @@ export default function Login() {
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div
                             onClick={() => setViewMode('password')}
-                            className="group p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-indigo-500/50 cursor-pointer transition-all hover:bg-white/10 flex items-center gap-4"
+                            className="group p-5 rounded-2xl bg-slate-900 border border-white/20 hover:border-indigo-500 cursor-pointer transition-all hover:bg-slate-800 flex items-center gap-4"
                         >
-                            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-all text-indigo-400">
-                                <UserIcon size={24} />
+                            <div className="w-14 h-14 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg text-white">
+                                <UserIcon size={28} />
                             </div>
                             <div className="flex-1 overflow-hidden text-left">
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cuenta recordada</p>
-                                <p className="text-white font-medium truncate">{email}</p>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Bienvenido</p>
+                                <p className="text-lg text-white font-bold truncate leading-none">{email.split('@')[0]}</p>
+                                <p className="text-xs text-slate-500 truncate">{email}</p>
                             </div>
-                            <LogIn size={18} className="text-slate-600 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                            <LogIn size={20} className="text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
                         </div>
 
                         <button
                             onClick={() => setViewMode('full')}
-                            className="w-full text-center text-xs text-slate-500 hover:text-white transition-colors uppercase tracking-widest"
+                            className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-widest"
                         >
                             Usar otra cuenta
                         </button>
                     </div>
                 )}
 
-                {/* Password Entry View */}
+                {/* Password Entry View or Full Login */}
                 {(viewMode === 'password' || viewMode === 'full') && (
                     <form onSubmit={handleLogin} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         {viewMode === 'password' && (
                             <button
+                                type="button"
                                 onClick={() => setViewMode('account')}
-                                className="flex items-center gap-2 text-xs text-slate-500 hover:text-white transition-colors uppercase tracking-widest mb-4"
+                                className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-widest mb-4"
                             >
-                                <ArrowLeft size={14} /> Volver
+                                <ArrowLeft size={16} /> Volver
                             </button>
                         )}
 
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             {viewMode === 'full' && (
-                                <div className="relative group">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={18} />
-                                    <input
-                                        type="email"
-                                        placeholder="Correo electrónico"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
-                                        required
-                                    />
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
+                                    <div className="relative group">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                                        <input
+                                            type="email"
+                                            placeholder="ejemplo@correo.com"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full bg-slate-900 border-2 border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-lg placeholder-slate-700 focus:border-indigo-500 focus:bg-slate-900 outline-none transition-all shadow-inner"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             )}
 
-                            <div className="relative group">
-                                <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={18} />
-                                <input
-                                    type="password"
-                                    placeholder="Contraseña"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
-                                    required
-                                    autoFocus
-                                />
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Contraseña</label>
+                                <div className="relative group">
+                                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                                    <input
+                                        type="password"
+                                        placeholder="············"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full bg-slate-900 border-2 border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-lg placeholder-slate-700 focus:border-indigo-500 focus:bg-slate-900 outline-none transition-all shadow-inner"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
                             </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                type="button"
+                                onClick={handleForgotPassword}
+                                className="text-sm font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-wide"
+                            >
+                                ¿Olvidaste tu contraseña?
+                            </button>
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl shadow-2xl shadow-indigo-600/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 text-lg uppercase tracking-widest"
                         >
-                            {loading ? <Loader2 className="animate-spin" size={20} /> : 'Iniciar Sesión'}
+                            {loading ? <Loader2 className="animate-spin" size={24} /> : (
+                                <>
+                                    <span>Ingresar</span>
+                                    <LogIn size={20} />
+                                </>
+                            )}
                         </button>
 
-                        <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
-                            <button
-                                type="button"
-                                onClick={handleMagicLink}
-                                disabled={loading}
-                                className="w-full text-center text-xs text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
-                            >
-                                <Send size={14} /> Acceso Rápido sin Contraseña
-                            </button>
-                            {viewMode === 'full' && email && (
+                        {viewMode === 'full' && email && (
+                            <div className="pt-4 border-t border-white/5 text-center">
                                 <button
                                     type="button"
                                     onClick={() => setViewMode('account')}
-                                    className="w-full text-center text-[10px] text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-colors"
+                                    className="text-xs text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-colors"
                                 >
-                                    Cuentas recordadas
+                                    Ver cuentas recordadas
                                 </button>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </form>
                 )}
 
                 {/* Connection Indicator */}
-                <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-center gap-4">
-                    <div className="flex items-center gap-2">
-                        {connectionStatus === 'online' ? (
-                            <div className="flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sistema en línea</span>
-                            </div>
-                        ) : connectionStatus === 'offline' ? (
-                            <div className="flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                                <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Falla de conexión</span>
-                            </div>
-                        ) : (
+                <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-center">
+                    {connectionStatus === 'online' ? (
+                        <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Sistema en línea</span>
+                        </div>
+                    ) : connectionStatus === 'offline' ? (
+                        <div className="flex items-center gap-2 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Falla de conexión</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 bg-slate-500/10 px-4 py-2 rounded-full">
+                            <Loader2 className="w-3 h-3 text-slate-500 animate-spin" />
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Verificando...</span>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

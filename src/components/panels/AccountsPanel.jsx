@@ -59,8 +59,8 @@ export const AccountsPanel = ({ accounts, transactionSums, onAddAccount, onSelec
                         >
                             <div className="flex justify-between items-start mb-3">
                                 <div className="flex flex-col">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold text-slate-900 dark:text-white text-sm tracking-tight">{acc.name}</span>
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="font-bold text-slate-900 dark:text-white text-xs lg:text-sm tracking-tight truncate">{acc.name}</span>
                                         {isSquared ? (
                                             <CheckCircle2 size={12} className="text-emerald-500" />
                                         ) : (
@@ -71,12 +71,12 @@ export const AccountsPanel = ({ accounts, transactionSums, onAddAccount, onSelec
                                         {mainLabel} {acc.account_number && `• ${acc.account_number}`}
                                     </span>
                                 </div>
-                                <div className="flex flex-col items-end">
-                                    <div className={`text-sm font-black tracking-tighter ${isCreditLine && (Number(acc.credit_limit) + Number(acc.balance)) < 0 ? 'text-rose-500' : (isCreditCard && Number(acc.balance) < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white')}`}>
+                                <div className="flex flex-col items-end shrink-0 ml-2">
+                                    <div className={`text-xs lg:text-sm font-black tracking-tighter whitespace-nowrap ${isCreditLine && (Number(acc.credit_limit) + Number(acc.balance)) < 0 ? 'text-rose-500' : (isCreditCard && Number(acc.balance) < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white')}`}>
                                         {formatCurrency(amountValue)}
                                     </div>
                                     {subInfo && (
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-0.5">
+                                        <span className="text-[8px] lg:text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-0.5">
                                             {subInfo}
                                         </span>
                                     )}
@@ -108,10 +108,10 @@ export const AccountsPanel = ({ accounts, transactionSums, onAddAccount, onSelec
                 })}
             </div>
 
-            <div className="bg-slate-100 dark:bg-slate-900/60 p-5 rounded-[2rem] mt-4 relative overflow-hidden group">
+            <div className="bg-slate-100 dark:bg-slate-900/60 p-4 lg:p-5 rounded-[2rem] mt-4 relative overflow-hidden group shrink-0">
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 rounded-full bg-accent-primary/5 blur-2xl transition-all"></div>
-                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] relative z-10">Total Patrimonio</span>
-                <div className="text-3xl font-black mt-1 tracking-tighter relative z-10 text-slate-900 dark:text-white">
+                <span className="text-[10px] lg:text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] relative z-10">Total Patrimonio</span>
+                <div className="text-2xl lg:text-3xl font-black mt-1 tracking-tighter relative z-10 text-slate-900 dark:text-white">
                     {formatCurrency(totalEquity)}
                 </div>
             </div>

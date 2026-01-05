@@ -318,56 +318,61 @@ export default function Dashboard({ view = 'dashboard' }) {
     }
 
     return (
-        <div className="flex h-screen bg-white dark:bg-carbon text-slate-900 dark:text-slate-100 font-sans overflow-hidden selection:bg-indigo-500/30">
-            {/* Minimalist Sidebar */}
-            <nav className="w-24 bg-white dark:bg-carbon flex flex-col items-center py-10 gap-10 z-30 shrink-0">
+        <div className="flex flex-col lg:flex-row h-screen bg-white dark:bg-carbon text-slate-900 dark:text-slate-100 font-sans overflow-hidden selection:bg-indigo-500/30">
+            {/* Sidebar (Desktop) / Bottom Nav (Mobile) */}
+            <nav className="fixed bottom-0 left-0 w-full lg:relative lg:w-24 bg-white dark:bg-carbon border-t lg:border-t-0 lg:border-r border-slate-100 dark:border-white/5 flex lg:flex-col items-center justify-around lg:justify-start py-4 lg:py-10 lg:gap-10 z-30 shrink-0">
                 <div
-                    className="w-10 h-10 bg-accent-primary rounded-xl flex items-center justify-center shadow-things hover:scale-105 transition-all cursor-pointer group"
+                    className="hidden lg:flex w-10 h-10 bg-accent-primary rounded-xl items-center justify-center shadow-things hover:scale-105 transition-all cursor-pointer group"
                     onClick={() => setCurrentView('dashboard')}
                 >
                     <LayoutGrid size={20} className="text-white" />
                 </div>
 
-                <div className="flex flex-col gap-6">
+                <div className="flex lg:flex-col gap-2 lg:gap-6">
                     <button
                         onClick={() => setCurrentView('dashboard')}
-                        className={`p-3 rounded-xl transition-all duration-300 ${currentView === 'dashboard' ? 'bg-slate-100 dark:bg-white/5 text-accent-primary' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+                        className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-1 ${currentView === 'dashboard' ? 'bg-slate-100 dark:bg-white/5 text-accent-primary' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
                         title="Dashboard"
                     >
                         <LayoutGrid size={22} />
+                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Inicio</span>
                     </button>
                     <button
                         onClick={() => setCurrentView('projections')}
-                        className={`p-3 rounded-xl transition-all duration-300 ${currentView === 'projections' ? 'bg-slate-100 dark:bg-white/5 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+                        className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-1 ${currentView === 'projections' ? 'bg-slate-100 dark:bg-white/5 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
                         title="Simulaciones"
                     >
                         <BarChart3 size={22} />
+                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Simula</span>
                     </button>
                 </div>
 
-                <div className="mt-auto flex flex-col gap-6">
-                    <button onClick={() => setDarkMode(!darkMode)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all">
+                <div className="flex lg:flex-col lg:mt-auto gap-2 lg:gap-6">
+                    <button onClick={() => setDarkMode(!darkMode)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all flex flex-col items-center gap-1">
                         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Modo</span>
                     </button>
-                    <button onClick={() => setShowCategoryModal(true)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all">
+                    <button onClick={() => setShowCategoryModal(true)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all flex flex-col items-center gap-1">
                         <Settings size={20} />
+                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Ajustes</span>
                     </button>
-                    <button onClick={handleLogout} className="p-3 text-rose-500/50 hover:text-rose-500 transition-all">
+                    <button onClick={handleLogout} className="p-3 text-rose-500/50 hover:text-rose-500 transition-all flex flex-col items-center gap-1">
                         <LogOut size={20} />
+                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Salir</span>
                     </button>
                 </div>
             </nav>
 
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-24 flex items-center justify-between px-12 shrink-0">
+            <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
+                <header className="h-20 lg:h-24 flex items-center justify-between px-6 lg:px-12 shrink-0">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3">
                             <h1 className="font-extrabold text-3xl tracking-tight text-slate-900 dark:text-white">
                                 {currentView === 'dashboard' ? 'Hola, ' + (user?.user_metadata?.alias || user?.email?.split('@')[0]) : 'Simulaciones'}
                             </h1>
                             <div className={`h-2.5 w-2.5 rounded-full mt-1 ${connectionStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' :
-                                    connectionStatus === 'offline' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' :
-                                        'bg-amber-500 animate-pulse'
+                                connectionStatus === 'offline' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' :
+                                    'bg-amber-500 animate-pulse'
                                 }`} title={connectionStatus === 'online' ? 'Conectado' : 'Sin conexión'} />
                         </div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Guapacha Finance Control</p>
@@ -385,11 +390,11 @@ export default function Dashboard({ view = 'dashboard' }) {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-hidden p-4">
+                <main className="flex-1 overflow-y-auto lg:overflow-hidden p-4">
                     {currentView === 'dashboard' ? (
-                        <div className="flex h-full w-full gap-6 overflow-hidden">
+                        <div className="flex flex-col lg:flex-row h-full w-full gap-6">
                             {/* Panel Izquierdo: Cuentas */}
-                            <aside className="w-[300px] shrink-0 things-surface p-2">
+                            <aside className="w-full lg:w-[300px] shrink-0 things-surface p-2 order-2 lg:order-1">
                                 <AccountsPanel
                                     accounts={accounts}
                                     transactionSums={transactionSums}
@@ -401,7 +406,7 @@ export default function Dashboard({ view = 'dashboard' }) {
                             </aside>
 
                             {/* Panel Central: Control Mensual */}
-                            <section className="flex-1 min-w-[500px] things-card relative flex flex-col overflow-hidden bg-white dark:bg-slate-900/40">
+                            <section className="flex-1 min-w-full lg:min-w-[500px] things-card relative flex flex-col overflow-hidden bg-white dark:bg-slate-900/40 order-1 lg:order-2">
                                 <MonthlyControl
                                     monthlyControl={monthlyControl}
                                     selectedDate={selectedDate}
@@ -409,14 +414,14 @@ export default function Dashboard({ view = 'dashboard' }) {
                                 />
                                 <button
                                     onClick={handleOpenAddModal}
-                                    className="absolute bottom-10 right-10 h-14 w-14 bg-accent-primary rounded-full shadow-xl shadow-indigo-500/20 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all z-20 group"
+                                    className="absolute bottom-6 right-6 lg:bottom-10 lg:right-10 h-14 w-14 bg-accent-primary rounded-full shadow-xl shadow-indigo-500/20 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all z-20 group"
                                 >
                                     <Plus size={24} strokeWidth={3} />
                                 </button>
                             </section>
 
                             {/* Panel Derecho: Transacciones */}
-                            <aside className="w-[360px] shrink-0 things-surface p-2">
+                            <aside className="w-full lg:w-[360px] shrink-0 things-surface p-2 order-3">
                                 <TransactionsPanel
                                     transactions={filteredTransactions}
                                     searchQuery={searchQuery}

@@ -18,6 +18,12 @@ export default function Login() {
     const [newPassword, setNewPassword] = useState('');
 
     useEffect(() => {
+        // Force recovery mode if URL contains the recovery type
+        if (window.location.hash.includes('type=recovery')) {
+            setViewMode('reset-password');
+            toast.success('Modo de recuperación activado. Define tu nueva contraseña.');
+        }
+
         // Detect recovery event
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'PASSWORD_RECOVERY') {

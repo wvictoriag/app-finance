@@ -65,7 +65,11 @@ export default function Login() {
             if (error) throw error;
             toast.success('Se ha enviado un enlace de recuperación a tu correo');
         } catch (error) {
-            toast.error('Error: ' + error.message);
+            console.error('Password reset error:', error);
+            const msg = error.message === 'Load failed' || error.message === 'Failed to fetch'
+                ? 'Error de conexión. Por favor, refresca la página y vuelve a intentar.'
+                : error.message;
+            toast.error('Error: ' + msg);
         } finally {
             setLoading(false);
         }

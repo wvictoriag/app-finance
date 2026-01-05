@@ -132,13 +132,13 @@ export default function Login() {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
                                     <div className="relative group">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
                                         <input
                                             type="email"
                                             placeholder="ejemplo@correo.com"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full bg-slate-900 border-2 border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-lg placeholder-slate-700 focus:border-indigo-500 focus:bg-slate-900 outline-none transition-all shadow-inner"
+                                            className="w-full bg-white border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-900 text-lg placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
                                             required
                                         />
                                     </div>
@@ -148,13 +148,13 @@ export default function Login() {
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Contraseña</label>
                                 <div className="relative group">
-                                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
                                     <input
                                         type="password"
-                                        placeholder="············"
+                                        placeholder="Tu contraseña"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full bg-slate-900 border-2 border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-lg placeholder-slate-700 focus:border-indigo-500 focus:bg-slate-900 outline-none transition-all shadow-inner"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-900 text-lg placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
                                         required
                                         autoFocus
                                     />

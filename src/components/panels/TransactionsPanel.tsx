@@ -1,8 +1,19 @@
 import React from 'react';
 import { Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import type { Transaction } from '../../types';
 
-export const TransactionsPanel = ({
+interface TransactionsPanelProps {
+    transactions: Transaction[];
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+    filterType: string;
+    setFilterType: (type: string) => void;
+    onEdit: (transaction: Transaction) => void;
+    onDelete: (id: string) => void;
+}
+
+export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
     transactions,
     searchQuery,
     setSearchQuery,

@@ -3,16 +3,27 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatCurrency } from '../../utils/formatters';
+import type { MonthlyControlItem } from '../../types';
 
-export const MonthlyControl = ({ monthlyControl, selectedDate, setSelectedDate }) => {
-    const [expandedGroups, setExpandedGroups] = useState({
+interface MonthlyControlProps {
+    monthlyControl: MonthlyControlItem[];
+    selectedDate: Date;
+    setSelectedDate: (date: Date) => void;
+}
+
+export const MonthlyControl: React.FC<MonthlyControlProps> = ({
+    monthlyControl,
+    selectedDate,
+    setSelectedDate
+}) => {
+    const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
         'Ingresos': true,
         'Gastos Fijos': true,
         'Gastos Variables': true,
         'Ahorro': true
     });
 
-    const toggleGroup = (group) => {
+    const toggleGroup = (group: string) => {
         setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
     };
 
@@ -83,7 +94,7 @@ export const MonthlyControl = ({ monthlyControl, selectedDate, setSelectedDate }
                                                     <div>
                                                         <p className="text-sm font-bold text-slate-900 dark:text-white mb-0.5">{item.name}</p>
                                                         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                                                            Prespuesto: {formatCurrency(item.monthly_budget)}
+                                                            Presupuesto: {formatCurrency(item.monthly_budget)}
                                                         </p>
                                                     </div>
                                                     <div className="text-right">

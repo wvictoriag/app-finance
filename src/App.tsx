@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
@@ -5,7 +6,11 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
-const ProtectedRoute = ({ children }) => {
+interface ProtectedRouteProps {
+    children: React.ReactNode;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -20,7 +25,7 @@ const ProtectedRoute = ({ children }) => {
         return <Navigate to="/login" />;
     }
 
-    return children;
+    return <>{children}</>;
 };
 
 function App() {

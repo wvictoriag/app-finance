@@ -1,12 +1,22 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import { User } from '@supabase/supabase-js';
 
-const AuthContext = createContext({});
+interface AuthContextType {
+    user: User | null;
+    loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+interface AuthProviderProps {
+    children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -15,7 +25,6 @@ export const AuthProvider = ({ children }) => {
             setUser(session?.user ?? null);
         }).catch(err => {
             console.error("Auth check failed:", err);
-            // Optionally set an error state here
         }).finally(() => {
             setLoading(false);
         });
@@ -34,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ user, loading }}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };

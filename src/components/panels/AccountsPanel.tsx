@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Pencil, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, CheckCircle2, AlertCircle, Scale } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import type { Account } from '../../types';
 
@@ -10,6 +10,7 @@ interface AccountsPanelProps {
     onSelectAccount: (account: Account) => void;
     onEditAccount: (account: Account) => void;
     onDeleteAccount: (id: string) => void;
+    onReconcile: (account: Account) => void;
 }
 
 export const AccountsPanel: React.FC<AccountsPanelProps> = ({
@@ -18,7 +19,8 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
     onAddAccount,
     onSelectAccount,
     onEditAccount,
-    onDeleteAccount
+    onDeleteAccount,
+    onReconcile
 }) => {
     const totalEquity = accounts.reduce((sum, acc) => {
         return sum + Number(acc.balance);
@@ -48,24 +50,59 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
                     const isReceivable = acc.type === 'Receivable';
 
                     // Display Values
-                    let mainLabel = acc.bank || 'Efectivo';
+                    let mainLabel = acc.bank || 'Institución';
                     let amountValue = Number(acc.balance);
                     let subInfo: string | null = null;
+                    let typeTag = '';
 
-                    if (isCreditLine) {
-                        mainLabel = 'Línea Disponible';
-                        const usage = amountValue < 0 ? Math.abs(amountValue) : 0;
-                        amountValue = Number(acc.credit_limit || 0) + Number(acc.balance);
-                        subInfo = `Uso: ${formatCurrency(usage)}`;
-                    } else if (isCreditCard) {
-                        mainLabel = 'Deuda Tarjeta';
-                        const debt = amountValue < 0 ? Math.abs(amountValue) : 0;
-                        const available = Number(acc.credit_limit || 0) - debt;
-                        amountValue = debt;
-                        subInfo = `Libre: ${formatCurrency(available)}`;
-                    } else if (isReceivable) {
-                        mainLabel = 'Por Cobrar';
-                        subInfo = 'Préstamo / Venta';
+                    switch (acc.type) {
+                        case 'Checking':
+                            typeTag = 'CC';
+                            mainLabel = acc.bank || 'Cta. Corriente';
+                            break;
+                        case 'Vista':
+                            typeTag = 'CV';
+                            mainLabel = acc.bank || 'Cta. Vista';
+                            break;
+                        case 'Savings':
+                            typeTag = 'CA';
+                            mainLabel = acc.bank || 'Cta. Ahorro';
+                            break;
+                        case 'CreditLine':
+                            typeTag = 'LC';
+                            mainLabel = 'Línea Disponible';
+                            const usageLC = amountValue < 0 ? Math.abs(amountValue) : 0;
+                            amountValue = Number(acc.credit_limit || 0) + Number(acc.balance);
+                            subInfo = `Uso: ${formatCurrency(usageLC)}`;
+                            break;
+                        case 'Credit':
+                            typeTag = 'TC';
+                            mainLabel = 'Deuda Tarjeta';
+                            const debt = amountValue < 0 ? Math.abs(amountValue) : 0;
+                            const available = Number(acc.credit_limit || 0) - debt;
+                            amountValue = debt;
+                            subInfo = `Libre: ${formatCurrency(available)}`;
+                            break;
+                        case 'Receivable':
+                            typeTag = 'CXC';
+                            mainLabel = 'Por Cobrar';
+                            break;
+                        case 'Payable':
+                            typeTag = 'CXP';
+                            mainLabel = 'Por Pagar';
+                            break;
+                        case 'Investment':
+                            typeTag = 'INV';
+                            mainLabel = 'Inversión';
+                            break;
+                        case 'Asset':
+                            typeTag = 'ACT';
+                            mainLabel = 'Activo / Bien';
+                            break;
+                        case 'Cash':
+                            typeTag = 'EFV';
+                            mainLabel = 'Efectivo';
+                            break;
                     }
 
                     return (
@@ -78,15 +115,22 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
                                 <div className="flex flex-col min-w-0">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <span className="font-bold text-slate-900 dark:text-white text-xs lg:text-sm tracking-tight truncate">{acc.name}</span>
-                                        {isSquared ? (
-                                            <CheckCircle2 size={12} className="text-emerald-500" />
-                                        ) : (
-                                            <AlertCircle size={12} className="text-amber-500" />
+                                        {!isSquared && (
+                                            <div className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full animate-pulse">
+                                                <AlertCircle size={10} strokeWidth={3} />
+                                                <span className="text-[8px] font-black uppercase tracking-tighter">Descuadrada</span>
+                                            </div>
                                         )}
+                                        {isSquared && <CheckCircle2 size={12} className="text-emerald-500" />}
                                     </div>
-                                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-0.5 truncate">
-                                        {mainLabel} {acc.account_number && `• ${acc.account_number}`}
-                                    </span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <div className="bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded-md">
+                                            <span className="text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{typeTag}</span>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight truncate">
+                                            {mainLabel} {acc.account_number && `• ${acc.account_number}`}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="flex flex-col items-end shrink-0 ml-2">
                                     <div className={`text-xs lg:text-sm font-black tracking-tighter whitespace-nowrap ${(isCreditLine && (Number(acc.credit_limit || 0) + Number(acc.balance)) < 0) ||
@@ -108,6 +152,13 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
                                     {(isCreditLine || isCreditCard) && ` • Cupo: ${formatCurrency(acc.credit_limit || 0)}`}
                                 </span>
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onReconcile(acc); }}
+                                        className="text-slate-400 hover:text-amber-500 transition-colors"
+                                        title="Reconciliar Saldo"
+                                    >
+                                        <Scale size={12} />
+                                    </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); onEditAccount(acc); }}
                                         className="text-slate-400 hover:text-accent-primary transition-colors"

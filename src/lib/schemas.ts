@@ -24,7 +24,7 @@ export const accountSchema = z.object({
     name: z.string().min(1, 'El nombre es obligatorio'),
     bank: z.string().optional(),
     account_number: z.string().optional(),
-    type: z.enum(['Debit', 'Credit', 'CreditLine', 'Receivable', 'Cash', 'Investment']),
+    type: z.enum(['Checking', 'Vista', 'Savings', 'Credit', 'CreditLine', 'Cash', 'Receivable', 'Payable', 'Investment', 'Asset']),
     balance: z.coerce.number(),
     credit_limit: z.coerce.number().default(0),
     initial_balance: z.coerce.number().default(0),

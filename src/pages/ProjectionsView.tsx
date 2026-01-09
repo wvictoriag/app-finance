@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { formatCurrency } from '../utils/formatters';
-import { TrendingUp, Plus, Trash2 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp, RefreshCcw, Landmark, ShoppingBag, Plus, Trash2, ChevronRight, Info } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Account, Transaction, Category } from '../types';
 
-interface Loan {
+interface SimulationScenario {
+    id: string;
     name: string;
-    monthlyPayment: number;
-    remainingInstallments: number;
+    type: 'purchase' | 'income_change' | 'extra_savings';
+    amount: number;
+    startMonth: number;
+    duration?: number; // months, 0 = permanent
 }
 
 interface ProjectionsViewProps {
@@ -17,202 +21,239 @@ interface ProjectionsViewProps {
 }
 
 export default function ProjectionsView({ transactions, accounts, categories }: ProjectionsViewProps) {
-    const [subView, setSubView] = useState<'5y' | '30y'>('5y');
+    const [horizon, setHorizon] = useState<'3y' | '10y'>('3y');
+    const [scenarios, setScenarios] = useState<SimulationScenario[]>([]);
+    const [showSimModal, setShowSimModal] = useState(false);
+    const [newSim, setNewSim] = useState<Partial<SimulationScenario>>({ type: 'purchase', amount: 0, startMonth: 1 });
 
-    // Shared State for Financial Parameters
-    const [avgIncome, setAvgIncome] = useState(0);
-    const [avgFixed, setAvgFixed] = useState(0);
-    const [avgVariable, setAvgVariable] = useState(0);
-    const [monthlySavings, setMonthlySavings] = useState(0);
-    const [investmentReturnRate, setInvestmentReturnRate] = useState(7);
-    const [inflationRate, setInflationRate] = useState(3);
-    const [loans, setLoans] = useState<Loan[]>([]);
-    const [creditLineInterest, setCreditLineInterest] = useState(2.5); // Monthly interest rate
-    const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
-    const [newLoan, setNewLoan] = useState({ name: '', monthlyPayment: '', remainingInstallments: '' });
+    // 1. Data-Driven Base Engine (Zero Friction)
+    // We calculate averages from the last 6 months of data
+    const baseStats = useMemo(() => {
+        if (transactions.length === 0) return { income: 0, fixed: 0, variable: 0, savings: 0 };
 
-    // Initial Data Loading
-    useEffect(() => {
-        if (transactions.length > 0) {
-            const sortedTxs = [...transactions].sort((a, b) => b.date.localeCompare(a.date));
-            const lastMonth = sortedTxs[0].date.slice(0, 7);
-            const monthTxs = transactions.filter(tx => tx.date.startsWith(lastMonth));
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        const recentTxs = transactions.filter(tx => new Date(tx.date) >= sixMonthsAgo);
 
-            let income = 0;
-            let fixed = 0;
-            let variable = 0;
-            let savings = 0;
+        // Group by month to get per-month averages
+        const monthsData: Record<string, { income: number, fixed: number, variable: number, savings: number }> = {};
 
-            monthTxs.forEach(tx => {
-                const amount = Math.abs(Number(tx.amount));
-                if (Number(tx.amount) > 0 && !tx.destination_account_id) {
-                    income += amount;
-                } else if (Number(tx.amount) < 0 && tx.category_id) {
-                    const cat = categories.find(c => c.id === tx.category_id);
-                    if (cat?.type === 'Gastos Fijos') fixed += amount;
-                    else if (cat?.type === 'Gastos Variables') variable += amount;
-                    else if (cat?.type === 'Ahorro') savings += amount;
+        recentTxs.forEach(tx => {
+            const m = tx.date.slice(0, 7);
+            if (!monthsData[m]) monthsData[m] = { income: 0, fixed: 0, variable: 0, savings: 0 };
+
+            const amount = Math.abs(Number(tx.amount));
+            const isIncome = Number(tx.amount) > 0 && !tx.destination_account_id;
+
+            if (isIncome) {
+                monthsData[m].income += amount;
+            } else if (Number(tx.amount) < 0 && tx.category_id) {
+                const cat = categories.find(c => c.id === tx.category_id);
+                if (cat?.type === 'Gastos Fijos') monthsData[m].fixed += amount;
+                else if (cat?.type === 'Gastos Variables') monthsData[m].variable += amount;
+                else if (cat?.type === 'Ahorro') monthsData[m].savings += amount;
+            }
+        });
+
+        const numMonths = Object.keys(monthsData).length || 1;
+        const sums = Object.values(monthsData).reduce((acc, curr) => ({
+            income: acc.income + curr.income,
+            fixed: acc.fixed + curr.fixed,
+            variable: acc.variable + curr.variable,
+            savings: acc.savings + curr.savings
+        }), { income: 0, fixed: 0, variable: 0, savings: 0 });
+
+        return {
+            income: Math.round(sums.income / numMonths),
+            fixed: Math.round(sums.fixed / numMonths),
+            variable: Math.round(sums.variable / numMonths),
+            savings: Math.round(sums.savings / numMonths)
+        };
+    }, [transactions, categories]);
+
+    // 2. Projection Engine
+    const projectionData = useMemo(() => {
+        const totalMonths = horizon === '3y' ? 36 : 120;
+        const currentEquity = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+
+        let data: any[] = [];
+        let runningWealth = currentEquity;
+        let simulatedWealth = currentEquity;
+
+        for (let m = 1; m <= totalMonths; m++) {
+            // Base Logic
+            const baseExpenses = baseStats.fixed + baseStats.variable;
+            const baseOperational = baseStats.income - baseExpenses;
+            const baseContribution = Math.max(0, Math.min(baseOperational, baseStats.savings));
+
+            runningWealth += baseContribution;
+
+            // Simulated Logic
+            let simIncome = baseStats.income;
+            let simExpenses = baseExpenses;
+            let simOneTime = 0;
+
+            scenarios.forEach(s => {
+                if (m >= s.startMonth && (s.duration === 0 || m < s.startMonth + (s.duration || 0))) {
+                    if (s.type === 'purchase') {
+                        if (m === s.startMonth) simOneTime += s.amount;
+                    } else if (s.type === 'income_change') {
+                        simIncome += s.amount;
+                    } else if (s.type === 'extra_savings') {
+                        // handled in contribution
+                    }
                 }
             });
 
-            setAvgIncome(income);
-            setAvgFixed(fixed);
-            setAvgVariable(variable);
-            setMonthlySavings(savings);
-        }
-    }, [transactions, categories]);
+            const simOperational = simIncome - simExpenses;
+            const extraSavings = scenarios
+                .filter(s => s.type === 'extra_savings' && m >= s.startMonth && (s.duration === 0 || m < s.startMonth + (s.duration || 0)))
+                .reduce((sum, s) => sum + s.amount, 0);
 
-    // Unified Projection Logic
-    const projectionData = useMemo(() => {
-        const months = 360; // Up to 30 years
-        let data: any[] = [];
-        let accumulatedWealth = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+            const simContribution = Math.max(0, Math.min(simOperational, baseStats.savings + extraSavings));
+            simulatedWealth += simContribution - simOneTime;
 
-        const monthlyReturnRate = (investmentReturnRate / 100) / 12;
-        const monthlyCreditInterest = creditLineInterest / 100;
-
-        for (let i = 1; i <= months; i++) {
-            const yearIndex = Math.floor((i - 1) / 12);
-
-            // 5Y specific: active loans
-            const activeLoansPayment = loans
-                .filter(l => Number(l.remainingInstallments) >= i)
-                .reduce((sum, l) => sum + Number(l.monthlyPayment), 0);
-
-            const totalExpenses = avgFixed + activeLoansPayment + avgVariable;
-            const operationalCash = avgIncome - totalExpenses;
-
-            let realContribution = 0;
-            if (operationalCash < 0) {
-                accumulatedWealth += operationalCash;
-            } else {
-                realContribution = Math.min(operationalCash, monthlySavings);
-                accumulatedWealth += realContribution;
+            if (horizon === '3y' || (horizon === '10y' && m % 12 === 0)) {
+                data.push({
+                    index: m,
+                    label: horizon === '3y' ? `Mes ${m}` : `Año ${m / 12}`,
+                    Patrimonio: Math.round(runningWealth),
+                    Simulado: Math.round(simulatedWealth),
+                    Ahorro: simContribution
+                });
             }
-
-            if (accumulatedWealth > 0) {
-                accumulatedWealth += accumulatedWealth * monthlyReturnRate;
-            } else if (accumulatedWealth < 0) {
-                accumulatedWealth += accumulatedWealth * monthlyCreditInterest;
-            }
-
-            // Real wealth adjusted by inflation
-            const realWealth = accumulatedWealth / Math.pow(1 + (inflationRate / 100), i / 12);
-
-            data.push({
-                index: i,
-                month: i,
-                year: yearIndex + 1,
-                income: avgIncome,
-                expenses: totalExpenses,
-                loanPayments: activeLoansPayment,
-                savingsContribution: realContribution,
-                wealth: Math.round(accumulatedWealth),
-                realWealth: Math.round(realWealth)
-            });
         }
         return data;
-    }, [avgIncome, avgFixed, avgVariable, monthlySavings, investmentReturnRate, inflationRate, loans, accounts]);
+    }, [horizon, baseStats, scenarios, accounts]);
 
-    const data5Y = projectionData.slice(0, 60);
-    const data30Y = projectionData.filter((_, i) => (i + 1) % 12 === 0 || i === 0);
+    const addScenario = () => {
+        if (!newSim.name || !newSim.amount) return;
+        setScenarios([...scenarios, { ...newSim, id: Date.now().toString() } as SimulationScenario]);
+        setShowSimModal(false);
+        setNewSim({ type: 'purchase', amount: 0, startMonth: 1 });
+    };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden bg-transparent">
-            {/* Header */}
-            <header className="px-6 lg:px-12 py-10 flex flex-col lg:flex-row justify-between lg:items-center gap-6 shrink-0">
-                <div className="flex items-center gap-4 lg:gap-10">
-                    <div>
-                        <h2 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Proyecciones</h2>
-                        <h3 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tighter">Pronóstico Financiero</h3>
-                    </div>
-
-                    <div className="flex bg-slate-50 dark:bg-white/5 p-1 rounded-2xl">
-                        <button
-                            onClick={() => setSubView('5y')}
-                            className={`px-4 lg:px-6 py-2 rounded-xl text-[10px] lg:text-[11px] font-black uppercase tracking-[0.2em] transition-all ${subView === '5y' ? 'bg-white dark:bg-white/10 text-accent-primary shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                        >
-                            5 Años
-                        </button>
-                        <button
-                            onClick={() => setSubView('30y')}
-                            className={`px-4 lg:px-6 py-2 rounded-xl text-[10px] lg:text-[11px] font-black uppercase tracking-[0.2em] transition-all ${subView === '30y' ? 'bg-white dark:bg-white/10 text-accent-primary shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                        >
-                            Largo Plazo
-                        </button>
+        <div className="flex flex-col h-full bg-transparent overflow-hidden">
+            {/* Simple Header */}
+            <div className="px-8 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/40 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 shrink-0">
+                <div>
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Capacidad Real Detectada</h2>
+                    <div className="flex items-center gap-6">
+                        <div className="flex flex-col">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Ingreso Avg.</span>
+                            <span className="text-sm font-black text-emerald-500 tracking-tight">{formatCurrency(baseStats.income)}</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Gasto Avg.</span>
+                            <span className="text-sm font-black text-rose-500 tracking-tight">{formatCurrency(baseStats.fixed + baseStats.variable)}</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Ahorro Avg.</span>
+                            <span className="text-sm font-black text-blue-500 tracking-tight">{formatCurrency(baseStats.savings)}</span>
+                        </div>
                     </div>
                 </div>
-            </header>
+
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 p-1 rounded-2xl">
+                    <button
+                        onClick={() => setHorizon('3y')}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${horizon === '3y' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                    >
+                        3 Años
+                    </button>
+                    <button
+                        onClick={() => setHorizon('10y')}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${horizon === '10y' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                    >
+                        10 Años
+                    </button>
+                </div>
+            </div>
 
             <div className="flex-1 flex overflow-hidden">
-                {/* Control Sidebar */}
-                <aside className="hidden lg:block w-[320px] p-12 overflow-y-auto space-y-12 shrink-0 scrollbar-hide border-r border-slate-100 dark:border-white/5">
-                    <section>
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Base de Ejecución</h3>
-                        <div className="space-y-6">
-                            {[
-                                { label: 'Ingresos Mensuales', val: avgIncome, set: setAvgIncome, color: 'text-emerald-500' },
-                                { label: 'Gastos Fijos', val: avgFixed, set: setAvgFixed, color: 'text-accent-primary' },
-                                { label: 'Gastos Variables', val: avgVariable, set: setAvgVariable, color: 'text-rose-500' },
-                                { label: 'Capacidad Ahorro', val: monthlySavings, set: setMonthlySavings, color: 'text-amber-500' },
-                            ].map(field => (
-                                <div key={field.label}>
-                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
-                                    <input
-                                        type="number"
-                                        value={field.val}
-                                        onChange={e => field.set(Number(e.target.value))}
-                                        className={`w-full bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 py-3 ${field.color} font-black text-sm tabular-nums outline-none transition-all focus:bg-white dark:focus:bg-white/10`}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+                {/* Simulator Sidebar */}
+                <aside className="hidden lg:flex w-80 flex-col bg-white/20 dark:bg-transparent border-r border-slate-100 dark:border-white/5 overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
+                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Simulador Financiero</h3>
+                        <button
+                            onClick={() => setShowSimModal(true)}
+                            className="w-7 h-7 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:scale-110 transition-all"
+                        >
+                            <Plus size={14} strokeWidth={3} />
+                        </button>
+                    </div>
 
-                    <section>
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Variables Mercado</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Retorno (%)</label>
-                                <input type="number" step="0.5" value={investmentReturnRate} onChange={e => setInvestmentReturnRate(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 py-3 text-emerald-500 font-black text-sm tabular-nums outline-none" />
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
+                        {scenarios.length === 0 ? (
+                            <div className="py-10 text-center px-4">
+                                <Info size={24} className="mx-auto text-slate-300 mb-3" />
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">¿Qué pasaría si...?<br />Agrega un escenario para simular cambios.</p>
                             </div>
-                            <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Inflación (%)</label>
-                                <input type="number" step="0.5" value={inflationRate} onChange={e => setInflationRate(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 py-3 text-rose-500 font-black text-sm tabular-nums outline-none" />
-                            </div>
-                        </div>
-                    </section>
+                        ) : (
+                            scenarios.map(s => (
+                                <div key={s.id} className="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-50 dark:border-white/5 group shadow-sm">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase mb-0.5">{s.type === 'purchase' ? 'Compra' : s.type === 'income_change' ? 'Ingreso' : 'Ahorro Extra'}</span>
+                                            <span className="text-sm font-black text-slate-800 dark:text-white tracking-tight leading-tight">{s.name}</span>
+                                        </div>
+                                        <button onClick={() => setScenarios(scenarios.filter(sc => sc.id !== s.id))} className="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100">
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                    <div className="flex justify-between items-center mt-3">
+                                        <span className={`text-[11px] font-black ${s.type === 'purchase' ? 'text-rose-500' : 'text-emerald-500'}`}>{formatCurrency(s.amount)}</span>
+                                        <span className="text-[9px] font-bold text-slate-400">Mes {s.startMonth}</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </aside>
 
-                {/* Main Content */}
-                <main className="flex-1 overflow-hidden flex flex-col p-6 lg:p-12 space-y-12">
-                    <div className="flex-1 min-h-[400px] flex flex-col relative">
-                        <div className="flex justify-between items-end mb-8 lg:mb-12">
+                {/* Plot Area */}
+                <main className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scrollbar-hide">
+                    <div className="relative h-[450px] w-full bg-white dark:bg-slate-900/20 rounded-[2.5rem] p-8 border border-white dark:border-white/5 shadow-premium">
+                        <div className="flex justify-between items-center mb-10">
                             <div>
-                                <h3 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tighter mb-1">
-                                    {subView === '5y' ? 'Dinámica de Flujo y Patrimonio' : 'Curva de Crecimiento Patrimonial'}
-                                </h3>
-                                <p className="text-[10px] lg:text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em]">Poder Adquisitivo Nominal vs Real</p>
+                                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">Proyección Logarítmica</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Escenario Base vs Simulado</p>
+                            </div>
+                            <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Base</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"></div>
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Simulado</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex-1 min-h-0">
+                        <div className="h-[320px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={subView === '5y' ? data5Y : data30Y}>
+                                <AreaChart data={projectionData}>
                                     <defs>
-                                        <linearGradient id="colorProg" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={subView === '5y' ? '#6366f1' : '#10b981'} stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor={subView === '5y' ? '#6366f1' : '#10b981'} stopOpacity={0} />
+                                        <linearGradient id="colorBase" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
+                                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorSim" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1} />
+                                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#00000005" vertical={false} />
                                     <XAxis
-                                        dataKey={subView === '5y' ? 'month' : 'year'}
+                                        dataKey="label"
                                         stroke="#94a3b8"
                                         fontSize={9}
                                         fontWeight={900}
                                         tickLine={false}
                                         axisLine={false}
+                                        dy={10}
                                     />
                                     <YAxis
                                         stroke="#94a3b8"
@@ -227,45 +268,112 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                                         itemStyle={{ fontSize: '12px', fontWeight: '900' }}
                                         formatter={(value: any) => formatCurrency(value)}
                                     />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="wealth"
-                                        stroke={subView === '5y' ? '#6366f1' : '#10b981'}
-                                        strokeWidth={4}
-                                        fillOpacity={1}
-                                        fill="url(#colorProg)"
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="realWealth"
-                                        stroke="#475569"
-                                        strokeWidth={2}
-                                        fillOpacity={0}
-                                        strokeDasharray="8 8"
-                                    />
+                                    <Area type="monotone" dataKey="Patrimonio" stroke="#2563eb" strokeWidth={4} fillOpacity={1} fill="url(#colorBase)" />
+                                    <Area type="monotone" dataKey="Simulado" stroke="#f43f5e" strokeWidth={4} fillOpacity={1} fill="url(#colorSim)" strokeDasharray="10 5" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8 overflow-x-auto pb-4 lg:pb-0">
-                        {(subView === '5y' ? [12, 24, 48, 60] : [5, 10, 20, 30]).map(val => {
-                            const point = subView === '5y' ? data5Y[val - 1] : data30Y.find(d => d.year === val);
-                            if (!point) return null;
-                            return (
-                                <div key={val} className="bg-slate-50 dark:bg-white/5 p-6 lg:p-8 rounded-[2rem] min-w-[160px]">
-                                    <p className="text-[10px] lg:text-[12px] text-slate-400 font-black uppercase tracking-[0.2em] mb-2">
-                                        {subView === '5y' ? `Mes ${val}` : `Año ${val}`}
-                                    </p>
-                                    <p className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white mb-2">{formatCurrency(point.wealth)}</p>
-                                    <p className="text-[9px] lg:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ajustado: {formatCurrency(point.realWealth)}</p>
+                    {/* Milestones / Future Wealth */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {projectionData.filter((_, i) => i === projectionData.length - 1 || i === Math.floor(projectionData.length / 2) || i === 0).map((point, idx) => (
+                            <div key={idx} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-sm">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Patrimonio en {point.label}</span>
+                                <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter mb-2">{formatCurrency(point.Simulado)}</div>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${point.Simulado >= point.Patrimonio ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                        {point.Simulado >= point.Patrimonio ? '+' : '-'} {formatCurrency(Math.abs(point.Simulado - point.Patrimonio))}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-400">vs. Escenario Base</span>
                                 </div>
-                            );
-                        })}
+                            </div>
+                        ))}
                     </div>
                 </main>
             </div>
+
+            {/* Simulation Modal */}
+            <AnimatePresence>
+                {showSimModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl max-w-md w-full p-8"
+                        >
+                            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tighter mb-2">Nuevo Escenario</h3>
+                            <p className="text-xs text-slate-400 mb-8 font-medium">Define un cambio en tu realidad financiera para ver cómo impacta tus proyecciones a largo plazo.</p>
+
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">¿Qué quieres simular?</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { id: 'purchase', label: 'Compra', icon: ShoppingBag },
+                                            { id: 'income_change', label: 'Ingreso', icon: Landmark },
+                                            { id: 'extra_savings', label: 'Ahorro', icon: RefreshCcw },
+                                        ].map(t => (
+                                            <button
+                                                key={t.id}
+                                                onClick={() => setNewSim({ ...newSim, type: t.id as any })}
+                                                className={`p-3 rounded-2xl border flex flex-col items-center gap-2 transition-all ${newSim.type === t.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-500'}`}
+                                            >
+                                                <t.icon size={18} />
+                                                <span className="text-[9px] font-black uppercase">{t.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <input
+                                    placeholder="Nombre: Ej. Compra de Auto"
+                                    className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-bold border-none outline-none focus:ring-2 ring-blue-500/20"
+                                    onChange={e => setNewSim({ ...newSim, name: e.target.value })}
+                                />
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto ($)</label>
+                                        <input
+                                            type="number"
+                                            placeholder="0"
+                                            className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-black border-none"
+                                            onChange={e => setNewSim({ ...newSim, amount: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mes Inicio</label>
+                                        <input
+                                            type="number"
+                                            placeholder="1"
+                                            className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-black border-none"
+                                            onChange={e => setNewSim({ ...newSim, startMonth: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        onClick={() => setShowSimModal(false)}
+                                        className="flex-1 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={addScenario}
+                                        className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/30"
+                                    >
+                                        Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

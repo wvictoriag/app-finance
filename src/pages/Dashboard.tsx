@@ -48,10 +48,10 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [showAccountModal, setShowAccountModal] = useState(false);
-    const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [showReconcileModal, setShowReconcileModal] = useState(false);
-    const [reconcileBalance, setReconcileBalance] = useState('');
-    const [viewingAccount, setViewingAccount] = useState<Account | null>(null);
+    const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+    const [reconcilingAccount, setReconcilingAccount] = useState<Account | null>(null);
+    const [reconcileValue, setReconcileValue] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState('all');
 
@@ -140,6 +140,22 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     // Selection handlers
     useEffect(() => { setCurrentView(view); }, [view]);
 
+    const handleReconcile = async () => {
+        if (!reconcilingAccount || reconcileValue === '') return;
+        try {
+            await updateAccount({
+                id: reconcilingAccount.id,
+                updates: { balance: Number(reconcileValue) } as any
+            });
+            setShowReconcileModal(false);
+            setReconcilingAccount(null);
+            setReconcileValue('');
+            toast.success('Saldo reconciliado');
+        } catch (err: any) {
+            toast.error(err.message);
+        }
+    };
+
     const handleLogout = async () => { await supabase.auth.signOut(); };
 
     const handleOpenAddModal = () => {
@@ -203,26 +219,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
         }
     });
 
-    const handleReconcile = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!viewingAccount) return;
-        try {
-            const diff = Number(reconcileBalance) - Number(viewingAccount.balance);
-            if (diff !== 0) {
-                await addTransaction({
-                    account_id: viewingAccount.id,
-                    date: new Date().toISOString().split('T')[0],
-                    amount: diff,
-                    description: '⚠️ Ajuste Reconciliación',
-                    category_id: null,
-                    destination_account_id: null
-                });
-                toast.success('Saldo ajustado');
-            }
-            setShowReconcileModal(false);
-            setViewingAccount(null);
-        } catch (err) { toast.error("Error al reconciliar"); }
-    };
 
     if (loadingAccs && accounts.length === 0) {
         return (
@@ -320,9 +316,10 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                         accounts={accounts}
                                         transactionSums={transactionSums}
                                         onAddAccount={() => setShowAccountModal(true)}
-                                        onSelectAccount={(acc) => setViewingAccount(acc)}
-                                        onEditAccount={(acc) => { setEditingAccount(acc); resetAcc(acc); setShowAccountModal(true); }}
+                                        onSelectAccount={(acc) => setEditingAccount(acc)}
+                                        onEditAccount={(acc) => { setEditingAccount(acc); resetAcc(acc as any); setShowAccountModal(true); }}
                                         onDeleteAccount={deleteAccount}
+                                        onReconcile={(acc) => { setReconcilingAccount(acc); setReconcileValue(acc.balance.toString()); setShowReconcileModal(true); }}
                                     />
                                 </div>
 
@@ -449,13 +446,17 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 <input {...regAcc('bank')} placeholder="Banco" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
                                 <input {...regAcc('account_number')} placeholder="N° Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
                             </div>
-                            <select {...regAcc('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3">
-                                <option value="Debit">Débito</option>
-                                <option value="Credit">Tarjeta de Crédito</option>
-                                <option value="CreditLine">Línea de Crédito</option>
-                                <option value="Receivable">Cuenta por Cobrar</option>
+                            <select {...regAcc('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm">
+                                <option value="Checking">Cuenta Corriente (CC)</option>
+                                <option value="Vista">Cuenta Vista (CV)</option>
+                                <option value="Savings">Cuenta de Ahorros (CA)</option>
+                                <option value="Credit">Tarjeta de Crédito (TC)</option>
+                                <option value="CreditLine">Línea de Crédito (LC)</option>
                                 <option value="Cash">Efectivo</option>
-                                <option value="Investment">Inversión</option>
+                                <option value="Receivable">Cuenta por Cobrar</option>
+                                <option value="Payable">Cuenta por Pagar</option>
+                                <option value="Investment">Inversión (Acciones/Crypto)</option>
+                                <option value="Asset">Activo (Vehículo/Propiedad)</option>
                             </select>
                             {errorsAcc.type && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsAcc.type.message}</p>}
                             <div className="grid grid-cols-2 gap-4">
@@ -534,17 +535,46 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                 </div>
             )}
 
-            {/* Reconcile Input Modal */}
-            {showReconcileModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+            {/* Quick Reconcile Modal */}
+            {showReconcileModal && reconcilingAccount && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                     <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-6">
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Reconciliar Saldo</h3>
-                        <p className="text-xs text-slate-500 mb-6 font-medium">Ingresa el saldo que ves en tu cartola bancaria para ajustar el sistema automáticamente.</p>
-                        <form onSubmit={handleReconcile} className="space-y-4">
-                            <input type="number" step="any" required className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-4 text-xl font-bold" value={reconcileBalance} onChange={e => setReconcileBalance(e.target.value)} autoFocus />
-                            <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg transition-all">Ajustar Saldo</button>
-                            <button type="button" onClick={() => setShowReconcileModal(false)} className="w-full py-2 text-slate-400 text-xs font-bold uppercase tracking-widest mt-2">Cancelar</button>
-                        </form>
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tighter">Reconciliar Saldo</h3>
+                        <p className="text-xs text-slate-400 mb-4">Ingresa el saldo real reportado por tu institución para <span className="font-bold text-slate-600 dark:text-slate-300">{reconcilingAccount.name}</span>.</p>
+
+                        <div className="space-y-4">
+                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Actual en App</span>
+                                <div className="text-lg font-bold text-slate-600 dark:text-slate-400">{formatCurrency(reconcilingAccount.balance)}</div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nuevo Saldo Real</label>
+                                <input
+                                    type="number"
+                                    step="any"
+                                    value={reconcileValue}
+                                    onChange={(e) => setReconcileValue(e.target.value)}
+                                    className="w-full rounded-2xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-4 text-2xl font-black tracking-tighter"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setShowReconcileModal(false)}
+                                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleReconcile}
+                                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30"
+                                >
+                                    Actualizar
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

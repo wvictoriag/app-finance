@@ -31,3 +31,11 @@ export const accountSchema = z.object({
 });
 
 export type AccountFormData = z.infer<typeof accountSchema>;
+
+export const categorySchema = z.object({
+    name: z.string().min(1, 'El nombre es obligatorio'),
+    type: z.enum(['Ingresos', 'Gastos Fijos', 'Gastos Variables', 'Ahorro']),
+    monthly_budget: z.coerce.number(),
+});
+
+export type CategoryFormData = z.infer<typeof categorySchema>;

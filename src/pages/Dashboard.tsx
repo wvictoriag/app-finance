@@ -10,7 +10,7 @@ import {
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { transactionSchema, accountSchema, type TransactionFormData, type AccountFormData } from '../lib/schemas';
+import { transactionSchema, accountSchema, categorySchema, type TransactionFormData, type AccountFormData, type CategoryFormData } from '../lib/schemas';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions, useMonthlyTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
@@ -60,6 +60,14 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
             type: 'expense',
             amount: 0
         }
+    });
+
+    const { register: regAcc, handleSubmit: handleAccSubmit, reset: resetAcc, formState: { errors: errorsAcc } } = useForm<AccountFormData>({
+        resolver: zodResolver(accountSchema) as any
+    });
+
+    const { register: regCat, handleSubmit: handleCatSubmit, reset: resetCat, formState: { errors: errorsCat } } = useForm<CategoryFormData>({
+        resolver: zodResolver(categorySchema) as any
     });
 
     const txType = watch('type');
@@ -181,7 +189,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
             }
 
             const payload = {
-                user_id: user?.id,
                 account_id: data.account_id,
                 date: data.date,
                 amount: finalAmount,
@@ -211,7 +218,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
             const diff = Number(reconcileBalance) - Number(viewingAccount.balance);
             if (diff !== 0) {
                 await addTransaction({
-                    user_id: user?.id,
                     account_id: viewingAccount.id,
                     date: new Date().toISOString().split('T')[0],
                     amount: diff,
@@ -384,34 +390,21 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">{editingAccount ? 'Editar' : 'Nueva'} Cuenta</h3>
                             <button onClick={() => { setShowAccountModal(false); setEditingAccount(null); }} className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-500 rounded-full w-8 h-8 flex items-center justify-center">✕</button>
                         </div>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            const payload = {
-                                user_id: user?.id,
-                                name: formData.get('name') as string,
-                                bank: formData.get('bank') as string,
-                                account_number: formData.get('account_number') as string,
-                                type: formData.get('type') as any,
-                                balance: Number(formData.get('balance')),
-                                credit_limit: Number(formData.get('credit_limit')) || 0,
-                                initial_balance: Number(formData.get('initial_balance')) || 0,
-                                last_update: new Date().toISOString()
-                            };
+                        <form onSubmit={handleAccSubmit(async (data: AccountFormData) => {
                             try {
-                                if (editingAccount) await updateAccount({ id: editingAccount.id, updates: payload });
-                                else await createAccount(payload);
+                                if (editingAccount) await updateAccount({ id: editingAccount.id, updates: data });
+                                else await createAccount(data);
                                 setShowAccountModal(false);
                                 setEditingAccount(null);
                                 toast.success('Cuenta guardada');
                             } catch (err: any) { toast.error(err.message); }
-                        }} className="space-y-4">
-                            <input name="name" defaultValue={editingAccount?.name} placeholder="Nombre Cuenta" required className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
+                        })} className="space-y-4">
+                            <input {...regAcc('name')} placeholder="Nombre Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
                             <div className="grid grid-cols-2 gap-4">
-                                <input name="bank" defaultValue={editingAccount?.bank || ''} placeholder="Banco" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
-                                <input name="account_number" defaultValue={editingAccount?.account_number || ''} placeholder="N° Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
+                                <input {...regAcc('bank')} placeholder="Banco" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
+                                <input {...regAcc('account_number')} placeholder="N° Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
                             </div>
-                            <select name="type" defaultValue={editingAccount?.type || 'Debit'} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3">
+                            <select {...regAcc('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3">
                                 <option value="Debit">Débito</option>
                                 <option value="Credit">Tarjeta de Crédito</option>
                                 <option value="CreditLine">Línea de Crédito</option>
@@ -422,11 +415,11 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-400 uppercase ml-2">Saldo Inicial</label>
-                                    <input name="initial_balance" type="number" step="any" defaultValue={editingAccount?.initial_balance || 0} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold" />
+                                    <input {...regAcc('initial_balance')} type="number" step="any" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-400 uppercase ml-2">Saldo Actual</label>
-                                    <input name="balance" type="number" step="any" defaultValue={editingAccount?.balance || 0} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold" />
+                                    <input {...regAcc('balance')} type="number" step="any" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold" />
                                 </div>
                             </div>
                             <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg transition-all">Guardar</button>
@@ -461,33 +454,27 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                             </div>
                             <div className="w-full md:w-80 p-6 bg-slate-50 dark:bg-slate-900/50 shrink-0">
                                 <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-4">{editingCategory ? 'Editar' : 'Nueva'} Categoría</h4>
-                                <form onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    const formData = new FormData(e.currentTarget);
-                                    const type = formData.get('type') as string;
-                                    let b = Number(formData.get('monthly_budget'));
-                                    if (['Gastos Fijos', 'Gastos Variables', 'Ahorro'].includes(type)) b = -Math.abs(b);
-                                    const payload = {
-                                        user_id: user?.id,
-                                        name: formData.get('name') as string,
-                                        type: formData.get('type') as any, // Cast to any to avoid enum mismatch
-                                        monthly_budget: b
-                                    };
+                                <form onSubmit={handleCatSubmit(async (data: CategoryFormData) => {
                                     try {
+                                        let b = data.monthly_budget;
+                                        if (['Gastos Fijos', 'Gastos Variables', 'Ahorro'].includes(data.type)) b = -Math.abs(b);
+                                        const payload = { ...data, monthly_budget: b };
+
                                         if (editingCategory) await updateCategory({ id: editingCategory.id, updates: payload });
                                         else await createCategory(payload);
                                         setEditingCategory(null);
+                                        resetCat();
                                         toast.success('Categoría guardada');
                                     } catch (err: any) { toast.error(err.message); }
-                                }} className="space-y-4">
-                                    <input name="name" defaultValue={editingCategory?.name} placeholder="Nombre" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm" required />
-                                    <select name="type" defaultValue={editingCategory?.type || 'Gastos Variables'} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm">
+                                })} className="space-y-4">
+                                    <input {...regCat('name')} placeholder="Nombre" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm" />
+                                    <select {...regCat('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm">
                                         <option value="Ingresos">Ingreso</option>
                                         <option value="Gastos Fijos">Gasto Fijo</option>
                                         <option value="Gastos Variables">Gasto Variable</option>
                                         <option value="Ahorro">Ahorro</option>
                                     </select>
-                                    <input name="monthly_budget" step="any" type="number" defaultValue={editingCategory ? Math.abs(editingCategory.monthly_budget) : ''} placeholder="Presupuesto" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm" />
+                                    <input {...regCat('monthly_budget')} step="any" type="number" placeholder="Presupuesto" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm" />
                                     <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold">Guardar</button>
                                     {editingCategory && (
                                         <button type="button" onClick={() => { if (confirm('Eliminar?')) deleteCategory(editingCategory.id); setEditingCategory(null); }} className="w-full py-3 text-rose-500 font-bold border border-rose-100 dark:border-rose-900 rounded-xl mt-2">Eliminar</button>

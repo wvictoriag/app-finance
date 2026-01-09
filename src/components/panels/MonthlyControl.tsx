@@ -29,7 +29,7 @@ export const MonthlyControl: React.FC<MonthlyControlProps> = ({
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center mb-6 px-1 pt-4">
+            <div className="flex justify-between items-center mb-4 px-1 pt-4">
                 <div className="pl-6">
                     <h2 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Ejecución</h2>
                     <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Control Mensual</p>
@@ -55,7 +55,7 @@ export const MonthlyControl: React.FC<MonthlyControlProps> = ({
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 space-y-12 scrollbar-hide pb-10">
+            <div className="flex-1 overflow-y-auto px-6 space-y-8 scrollbar-hide pb-6">
                 {['Ingresos', 'Gastos Fijos', 'Gastos Variables', 'Ahorro'].map((groupType) => {
                     const groupItems = monthlyControl
                         .filter(item => item.type === groupType)
@@ -67,7 +67,7 @@ export const MonthlyControl: React.FC<MonthlyControlProps> = ({
                     const isExpanded = expandedGroups[groupType];
 
                     return (
-                        <div key={groupType} className="space-y-6">
+                        <div key={groupType} className="space-y-4">
                             <div
                                 onClick={() => toggleGroup(groupType)}
                                 className="flex items-center justify-between cursor-pointer group"

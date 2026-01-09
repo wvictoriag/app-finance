@@ -24,11 +24,11 @@ export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
 }) => {
     return (
         <div className="h-full flex flex-col overflow-hidden">
-            <div className="mb-8">
+            <div className="mb-6 px-4">
                 <div className="flex justify-between items-center mb-6 px-1">
                     <div>
-                        <h2 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Movimientos</h2>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Historial Reciente</p>
+                        <h2 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Movimientos</h2>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Historial Reciente</p>
                     </div>
                 </div>
 
@@ -59,7 +59,7 @@ export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-1 pr-1 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto space-y-0.5 pr-1 scrollbar-hide px-4">
                 {transactions.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
                         <ArrowRightLeft className="w-8 h-8 text-slate-200 dark:text-slate-800 mb-4" />
@@ -67,7 +67,7 @@ export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
                     </div>
                 ) : (
                     transactions.map((tx) => (
-                        <div key={tx.id} className="group flex justify-between items-center p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all duration-300 cursor-default">
+                        <div key={tx.id} className="group flex justify-between items-center p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all duration-300 cursor-default">
                             <div className="flex items-center gap-4 min-w-0">
                                 <div className={`w-1 h-6 rounded-full shrink-0 ${tx.destination_account_id ? 'bg-blue-400' :
                                     Number(tx.amount) < 0 ? 'bg-rose-500' : 'bg-emerald-500'

@@ -267,10 +267,10 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
             </nav>
 
             <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
-                <header className="h-20 lg:h-24 flex items-center justify-between px-6 lg:px-12 shrink-0">
+                <header className="flex flex-col lg:flex-row lg:items-center justify-between px-6 lg:px-10 py-6 lg:py-8 bg-white/50 dark:bg-transparent border-b border-slate-100 dark:border-white/5 gap-4">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3">
-                            <h1 className="font-extrabold text-3xl tracking-tight text-slate-900 dark:text-white">
+                            <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
                                 {currentView === 'dashboard' ? 'Hola, ' + (user?.user_metadata?.alias || user?.email?.split('@')[0]) : 'Simulaciones'}
                             </h1>
                             <div className={`h-2.5 w-2.5 rounded-full mt-1 ${connectionStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' :
@@ -278,7 +278,28 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                     'bg-amber-500 animate-pulse'
                                 }`} />
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Guapacha Finance Control</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Guapacha Finance Intelligence</p>
+                    </div>
+
+                    <div className="flex items-center gap-6 lg:gap-12 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                        <div className="flex flex-col shrink-0">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Patrimonio Neto</span>
+                            <span className="text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                {formatCurrency(accounts.reduce((sum, acc) => sum + Number(acc.balance), 0))}
+                            </span>
+                        </div>
+                        <div className="flex flex-col shrink-0">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Ingresos Mes</span>
+                            <span className="text-lg lg:text-xl font-black text-emerald-500 tracking-tighter">
+                                {formatCurrency(monthTx?.filter(tx => Number(tx.amount) > 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0)}
+                            </span>
+                        </div>
+                        <div className="flex flex-col shrink-0">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Gastos Mes</span>
+                            <span className="text-lg lg:text-xl font-black text-rose-500 tracking-tighter">
+                                {formatCurrency(Math.abs(monthTx?.filter(tx => Number(tx.amount) < 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0))}
+                            </span>
+                        </div>
                     </div>
                 </header>
 
@@ -293,29 +314,29 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 transition={{ duration: 0.3 }}
                                 className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden gap-0"
                             >
-                                {/* Left Side: Account and Monthly Execution */}
-                                <div className="lg:col-span-4 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5 order-2 lg:order-1">
-                                    <div className="flex-1 overflow-hidden">
-                                        <AccountsPanel
-                                            accounts={accounts}
-                                            transactionSums={transactionSums}
-                                            onAddAccount={() => setShowAccountModal(true)}
-                                            onSelectAccount={(acc) => setViewingAccount(acc)}
-                                            onEditAccount={(acc) => { setEditingAccount(acc); resetAcc(acc); setShowAccountModal(true); }}
-                                            onDeleteAccount={deleteAccount}
-                                        />
-                                    </div>
-                                    <div className="flex-1 overflow-hidden border-t border-slate-100 dark:border-white/5">
-                                        <MonthlyControl
-                                            monthlyControl={monthlyControl}
-                                            selectedDate={selectedDate}
-                                            setSelectedDate={setSelectedDate}
-                                        />
-                                    </div>
+                                {/* Column 1: Accounts */}
+                                <div className="lg:col-span-3 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5">
+                                    <AccountsPanel
+                                        accounts={accounts}
+                                        transactionSums={transactionSums}
+                                        onAddAccount={() => setShowAccountModal(true)}
+                                        onSelectAccount={(acc) => setViewingAccount(acc)}
+                                        onEditAccount={(acc) => { setEditingAccount(acc); resetAcc(acc); setShowAccountModal(true); }}
+                                        onDeleteAccount={deleteAccount}
+                                    />
                                 </div>
 
-                                {/* Right Side: Transactions */}
-                                <div className="lg:col-span-8 flex flex-col overflow-hidden order-1 lg:order-2">
+                                {/* Column 2: Monthly Control */}
+                                <div className="lg:col-span-4 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5">
+                                    <MonthlyControl
+                                        monthlyControl={monthlyControl}
+                                        selectedDate={selectedDate}
+                                        setSelectedDate={setSelectedDate}
+                                    />
+                                </div>
+
+                                {/* Column 3: Transactions */}
+                                <div className="lg:col-span-5 flex flex-col overflow-hidden">
                                     <TransactionsPanel
                                         transactions={filteredTransactions}
                                         onEdit={(tx: Transaction) => {

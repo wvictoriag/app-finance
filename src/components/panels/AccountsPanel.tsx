@@ -25,7 +25,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
     }, 0);
 
     return (
-        <div className="h-full flex flex-col overflow-hidden p-4">
+        <div className="h-full flex flex-col overflow-hidden p-2 lg:p-4">
             <div className="flex justify-between items-center mb-4 px-1">
                 <h2 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Cuentas</h2>
                 <button
@@ -37,7 +37,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-1 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto space-y-2 pb-4 pr-1 scrollbar-hide">
                 {accounts.map(acc => {
                     const sums = transactionSums?.[acc.id] || 0;
                     const initial = Number(acc.initial_balance) || 0;
@@ -71,7 +71,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
                     return (
                         <div
                             key={acc.id}
-                            className="group bg-white dark:bg-slate-900/40 p-5 rounded-[2rem] shadow-things dark:shadow-things-dark hover:scale-[1.02] transition-all duration-500 relative cursor-pointer"
+                            className="group bg-white dark:bg-slate-900/40 p-4 rounded-3xl shadow-sm dark:shadow-things-dark hover:scale-[1.01] transition-all duration-500 relative cursor-pointer border border-slate-50 dark:border-white/5"
                             onClick={() => onSelectAccount(acc)}
                         >
                             <div className="flex justify-between items-start mb-3">
@@ -90,7 +90,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
                                 </div>
                                 <div className="flex flex-col items-end shrink-0 ml-2">
                                     <div className={`text-xs lg:text-sm font-black tracking-tighter whitespace-nowrap ${(isCreditLine && (Number(acc.credit_limit || 0) + Number(acc.balance)) < 0) ||
-                                            (isCreditCard && Number(acc.balance) < 0) ? 'text-rose-500' : 'text-slate-900 dark:text-white'
+                                        (isCreditCard && Number(acc.balance) < 0) ? 'text-rose-500' : 'text-slate-900 dark:text-white'
                                         }`}>
                                         {formatCurrency(amountValue)}
                                     </div>
@@ -127,7 +127,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
                 })}
             </div>
 
-            <div className="bg-slate-100 dark:bg-slate-900/60 p-4 lg:p-5 rounded-[2rem] mt-4 relative overflow-hidden group shrink-0">
+            <div className="bg-slate-100 dark:bg-slate-900/60 p-4 rounded-3xl mt-2 relative overflow-hidden group shrink-0">
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 rounded-full bg-accent-primary/5 blur-2xl transition-all"></div>
                 <span className="text-[10px] lg:text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] relative z-10">Total Patrimonio</span>
                 <div className="text-2xl lg:text-3xl font-black mt-1 tracking-tighter relative z-10 text-slate-900 dark:text-white">

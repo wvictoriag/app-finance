@@ -29,6 +29,7 @@ export const useTransactions = (limit: number = 50) => {
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            queryClient.invalidateQueries({ queryKey: ['transaction-sums'] });
             queryClient.invalidateQueries({ queryKey: ['accounts'] }); // Balance changed
         },
     });
@@ -38,6 +39,7 @@ export const useTransactions = (limit: number = 50) => {
             api.updateTransaction(id, updates),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            queryClient.invalidateQueries({ queryKey: ['transaction-sums'] });
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
         },
     });
@@ -46,6 +48,7 @@ export const useTransactions = (limit: number = 50) => {
         mutationFn: (id: string) => api.deleteTransaction(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            queryClient.invalidateQueries({ queryKey: ['transaction-sums'] });
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
         },
     });

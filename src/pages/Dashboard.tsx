@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { transactionSchema, accountSchema, categorySchema, type TransactionFormData, type AccountFormData, type CategoryFormData } from '../lib/schemas';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions, useMonthlyTransactions } from '../hooks/useTransactions';
+import { useTransactionSums } from '../hooks/useTransactionSums';
 import { useCategories } from '../hooks/useCategories';
 import toast from 'react-hot-toast';
 
@@ -22,6 +23,7 @@ import { TransactionsPanel } from '../components/panels/TransactionsPanel';
 import { MonthlyControl } from '../components/panels/MonthlyControl';
 import ProjectionsView from './ProjectionsView';
 import type { Account, Category, Transaction, MonthlyControlItem } from '../types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const { user } = useAuth();
@@ -36,6 +38,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     // TanStack Query Hooks
     const { accounts, isLoading: loadingAccs, createAccount, updateAccount, deleteAccount } = useAccounts();
     const { transactions, isLoading: loadingRecent, addTransaction, updateTransaction, deleteTransaction } = useTransactions(100);
+    const { data: transactionSumsData, isLoading: loadingSums } = useTransactionSums();
     const { categories, isLoading: loadingCats, createCategory, updateCategory, deleteCategory } = useCategories();
     const { data: monthTx, isLoading: loadingMonth } = useMonthlyTransactions(selectedMonth, selectedYear);
 
@@ -72,18 +75,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
 
     const txType = watch('type');
 
-    // Computed Data
-    const transactionSums = useMemo(() => {
-        const sums: Record<string, number> = {};
-        transactions.forEach(tx => {
-            const amt = Number(tx.amount);
-            sums[tx.account_id] = (sums[tx.account_id] || 0) + (tx.destination_account_id ? -Math.abs(amt) : amt);
-            if (tx.destination_account_id) {
-                sums[tx.destination_account_id] = (sums[tx.destination_account_id] || 0) + Math.abs(amt);
-            }
-        });
-        return sums;
-    }, [transactions]);
+    const transactionSums = transactionSumsData || {};
 
     const monthlyControl = useMemo((): MonthlyControlItem[] => {
         if (!categories || !monthTx) return [];
@@ -290,48 +282,79 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto lg:overflow-hidden p-4">
-                    {currentView === 'dashboard' ? (
-                        <div className="flex flex-col lg:flex-row h-full w-full gap-6">
-                            <aside className="w-full lg:w-[300px] shrink-0 things-surface p-2 order-2 lg:order-1">
-                                <AccountsPanel
+                <main className="flex-1 min-w-0 bg-white/50 dark:bg-transparent overflow-hidden flex flex-col pt-4 relative">
+                    <AnimatePresence mode="wait">
+                        {currentView === 'dashboard' ? (
+                            <motion.div
+                                key="dashboard"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden gap-0"
+                            >
+                                {/* Left Side: Account and Monthly Execution */}
+                                <div className="lg:col-span-4 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5 order-2 lg:order-1">
+                                    <div className="flex-1 overflow-hidden">
+                                        <AccountsPanel
+                                            accounts={accounts}
+                                            transactionSums={transactionSums}
+                                            onAddAccount={() => setShowAccountModal(true)}
+                                            onSelectAccount={(acc) => setViewingAccount(acc)}
+                                            onEditAccount={(acc) => { setEditingAccount(acc); resetAcc(acc); setShowAccountModal(true); }}
+                                            onDeleteAccount={deleteAccount}
+                                        />
+                                    </div>
+                                    <div className="flex-1 overflow-hidden border-t border-slate-100 dark:border-white/5">
+                                        <MonthlyControl
+                                            monthlyControl={monthlyControl}
+                                            selectedDate={selectedDate}
+                                            setSelectedDate={setSelectedDate}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Right Side: Transactions */}
+                                <div className="lg:col-span-8 flex flex-col overflow-hidden order-1 lg:order-2">
+                                    <TransactionsPanel
+                                        transactions={filteredTransactions}
+                                        onEdit={(tx: Transaction) => {
+                                            setEditingTransaction(tx);
+                                            reset({
+                                                ...tx,
+                                                category_id: tx.category_id || undefined,
+                                                destination_account_id: tx.destination_account_id || undefined
+                                            });
+                                            setShowModal(true);
+                                        }}
+                                        onDelete={deleteTransaction}
+                                        searchQuery={searchQuery}
+                                        setSearchQuery={setSearchQuery}
+                                        filterType={filterType}
+                                        setFilterType={setFilterType}
+                                    />
+                                    <button onClick={() => { setEditingTransaction(null); reset({ date: new Date().toISOString().split('T')[0], type: 'expense', amount: 0 }); setShowModal(true); }} className="absolute bottom-10 right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
+                                        <Plus size={32} strokeWidth={3} />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ) : currentView === 'projections' ? (
+                            <motion.div
+                                key="projections"
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <ProjectionsView
+                                    transactions={transactions}
                                     accounts={accounts}
-                                    transactionSums={transactionSums}
-                                    onAddAccount={() => { setEditingAccount(null); setShowAccountModal(true); }}
-                                    onSelectAccount={(acc) => setViewingAccount(acc)}
-                                    onEditAccount={(acc) => { setEditingAccount(acc); setShowAccountModal(true); }}
-                                    onDeleteAccount={deleteAccount}
+                                    categories={categories}
                                 />
-                            </aside>
-
-                            <section className="flex-1 min-w-full lg:min-w-[500px] things-card relative flex flex-col overflow-hidden bg-white dark:bg-slate-900/40 order-1 lg:order-2">
-                                <MonthlyControl
-                                    monthlyControl={monthlyControl}
-                                    selectedDate={selectedDate}
-                                    setSelectedDate={setSelectedDate}
-                                />
-                                <button onClick={handleOpenAddModal} className="absolute bottom-6 right-6 lg:bottom-10 lg:right-10 h-14 w-14 bg-accent-primary rounded-full shadow-xl shadow-indigo-500/20 flex items-center justify-center text-white hover:scale-105 transition-all z-20">
-                                    <Plus size={24} strokeWidth={3} />
-                                </button>
-                            </section>
-
-                            <aside className="w-full lg:w-[360px] shrink-0 things-surface p-2 order-3">
-                                <TransactionsPanel
-                                    transactions={filteredTransactions}
-                                    searchQuery={searchQuery}
-                                    setSearchQuery={setSearchQuery}
-                                    filterType={filterType}
-                                    setFilterType={setFilterType}
-                                    onEdit={handleOpenEditModal}
-                                    onDelete={deleteTransaction}
-                                />
-                            </aside>
-                        </div>
-                    ) : (
-                        <div className="h-full things-card overflow-hidden">
-                            <ProjectionsView transactions={transactions} accounts={accounts} categories={categories} />
-                        </div>
-                    )}
+                            </motion.div>
+                        ) : null}
+                    </AnimatePresence>
                 </main>
             </div>
 

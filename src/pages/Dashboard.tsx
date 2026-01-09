@@ -400,6 +400,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                             } catch (err: any) { toast.error(err.message); }
                         })} className="space-y-4">
                             <input {...regAcc('name')} placeholder="Nombre Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
+                            {errorsAcc.name && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsAcc.name.message}</p>}
                             <div className="grid grid-cols-2 gap-4">
                                 <input {...regAcc('bank')} placeholder="Banco" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
                                 <input {...regAcc('account_number')} placeholder="N° Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
@@ -412,6 +413,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 <option value="Cash">Efectivo</option>
                                 <option value="Investment">Inversión</option>
                             </select>
+                            {errorsAcc.type && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsAcc.type.message}</p>}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-400 uppercase ml-2">Saldo Inicial</label>
@@ -468,6 +470,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                     } catch (err: any) { toast.error(err.message); }
                                 })} className="space-y-4">
                                     <input {...regCat('name')} placeholder="Nombre" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm" />
+                                    {errorsCat.name && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsCat.name.message}</p>}
                                     <select {...regCat('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm">
                                         <option value="Ingresos">Ingreso</option>
                                         <option value="Gastos Fijos">Gasto Fijo</option>
@@ -475,6 +478,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                         <option value="Ahorro">Ahorro</option>
                                     </select>
                                     <input {...regCat('monthly_budget')} step="any" type="number" placeholder="Presupuesto" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm" />
+                                    {errorsCat.monthly_budget && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsCat.monthly_budget.message}</p>}
                                     <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold">Guardar</button>
                                     {editingCategory && (
                                         <button type="button" onClick={() => { if (confirm('Eliminar?')) deleteCategory(editingCategory.id); setEditingCategory(null); }} className="w-full py-3 text-rose-500 font-bold border border-rose-100 dark:border-rose-900 rounded-xl mt-2">Eliminar</button>

@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import './index.css';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
+import { RegionProvider } from './contexts/RegionContext';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -21,10 +22,12 @@ if (!rootElement) throw new Error('Failed to find the root element');
 createRoot(rootElement).render(
     <StrictMode>
         <ErrorBoundary>
-            <QueryClientProvider client={queryClient}>
-                <App />
-                <ReactQueryDevtools initialIsOpen={false} />
-            </QueryClientProvider>
+            <RegionProvider>
+                <QueryClientProvider client={queryClient}>
+                    <App />
+                    <ReactQueryDevtools initialIsOpen={false} />
+                </QueryClientProvider>
+            </RegionProvider>
         </ErrorBoundary>
     </StrictMode>
 );

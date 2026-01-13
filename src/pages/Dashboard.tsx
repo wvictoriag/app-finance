@@ -16,6 +16,7 @@ import { useTransactions, useMonthlyTransactions } from '../hooks/useTransaction
 import { useTransactionSums } from '../hooks/useTransactionSums';
 import { useCategories } from '../hooks/useCategories';
 import toast from 'react-hot-toast';
+import { RegionSelector } from '../components/RegionSelector';
 
 // Modular Components
 import { AccountsPanel } from '../components/panels/AccountsPanel';
@@ -300,6 +301,17 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                             <span className="text-lg lg:text-xl font-black text-rose-500 tracking-tighter">
                                 {formatCurrency(Math.abs(monthTx?.filter(tx => Number(tx.amount) < 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0))}
                             </span>
+                        </div>
+
+                        <div className="flex items-center gap-4 border-l border-slate-200 dark:border-white/5 pl-6 lg:pl-12">
+                            <RegionSelector />
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 text-slate-400 hover:text-rose-500 transition-colors group"
+                            >
+                                <span className="text-[10px] font-black uppercase tracking-widest hidden md:block group-hover:underline decoration-2 underline-offset-4">Cerrar Sesión</span>
+                                <LogOut size={18} />
+                            </button>
                         </div>
                     </div>
                 </header>

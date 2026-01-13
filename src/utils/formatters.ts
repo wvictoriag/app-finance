@@ -3,13 +3,19 @@ import { es } from 'date-fns/locale';
 
 /**
  * Formats a number as currency.
- * Uses the browser's locale or falls back to 'es-CL'.
+ * Adapts to the selected region (CL or CO) stored in localStorage.
  */
-export const formatCurrency = (amount: number, currency: string = 'CLP'): string => {
-    const browserLocale = navigator.language || 'es-CL';
-    return new Intl.NumberFormat(browserLocale, {
+export const formatCurrency = (amount: number, currency?: string): string => {
+    const region = localStorage.getItem('app_region') || 'CL';
+    const isColombia = region === 'CO';
+
+    // Colombia uses COP, Chile uses CLP
+    const targetCurrency = currency || (isColombia ? 'COP' : 'CLP');
+    const locale = isColombia ? 'es-CO' : 'es-CL';
+
+    return new Intl.NumberFormat(locale, {
         style: 'currency',
-        currency: currency,
+        currency: targetCurrency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(amount);
@@ -28,8 +34,12 @@ export const formatDate = (dateString: string): string => {
 
         if (isNaN(date.getTime())) return 'Fecha inválida';
 
-        const browserLocale = navigator.language || 'es-CL';
-        return new Intl.DateTimeFormat(browserLocale, {
+        if (isNaN(date.getTime())) return 'Fecha inválida';
+
+        const region = localStorage.getItem('app_region') || 'CL';
+        const locale = region === 'CO' ? 'es-CO' : 'es-CL';
+
+        return new Intl.DateTimeFormat(locale, {
             day: 'numeric',
             month: 'short',
             year: 'numeric'
@@ -44,8 +54,10 @@ export const formatDate = (dateString: string): string => {
  * Returns the month and year name for a given date.
  */
 export const getMonthName = (date: Date): string => {
-    const browserLocale = navigator.language || 'es-CL';
-    return new Intl.DateTimeFormat(browserLocale, {
+    const region = localStorage.getItem('app_region') || 'CL';
+    const locale = region === 'CO' ? 'es-CO' : 'es-CL';
+
+    return new Intl.DateTimeFormat(locale, {
         month: 'long',
         year: 'numeric'
     }).format(date);

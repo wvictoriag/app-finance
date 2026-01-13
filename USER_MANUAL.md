@@ -13,6 +13,12 @@ Bienvenido a **Guapacha Finance**, tu sistema inteligente de gestión financiera
     - 🔴 **Falla Crítica**: Sin conexión a internet o servidor.
     - ⚪ **Sincronizando**: Estableciendo comunicación.
 
+### Configuración Regional (NUEVO) 🌎
+Si estás en **Colombia** o quieres cambiar la moneda:
+- En la parte superior del Dashboard, verás un botón con la bandera de tu región actual (ej: 🇨🇱 Chile).
+- Haz clic allí y selecciona **Colombia (COP)**.
+- El sistema actualizará automáticamente todos los símbolos de moneda y formatos de fecha.
+
 ### Recuperación de Contraseña
 - En la pantalla de login, utiliza la opción **"¿Olvidaste tu contraseña?"** para recibir un enlace de recuperación en tu correo.
 

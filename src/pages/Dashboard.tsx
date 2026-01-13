@@ -279,7 +279,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                     'bg-amber-500 animate-pulse'
                                 }`} />
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Guapacha Finance Intelligence</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Guapacha Finance Intelligence <span className="text-emerald-500 ml-2">v2.0</span></p>
                     </div>
 
                     <div className="flex items-center gap-6 lg:gap-12 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">

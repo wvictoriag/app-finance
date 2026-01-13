@@ -4,6 +4,9 @@ import { format, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatCurrency } from '../../utils/formatters';
 import type { MonthlyControlItem } from '../../types';
+import { CategoryChart } from '../charts/CategoryChart';
+import { CashFlowSummary } from '../charts/CashFlowSummary';
+import { PieChart as PieIcon, List } from 'lucide-react';
 
 interface MonthlyControlProps {
     monthlyControl: MonthlyControlItem[];
@@ -22,6 +25,7 @@ export const MonthlyControl: React.FC<MonthlyControlProps> = ({
         'Gastos Variables': true,
         'Ahorro': true
     });
+    const [showChart, setShowChart] = useState(true);
 
     const toggleGroup = (group: string) => {
         setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -32,7 +36,16 @@ export const MonthlyControl: React.FC<MonthlyControlProps> = ({
             <div className="flex justify-between items-center mb-4 px-1 pt-4">
                 <div className="pl-6">
                     <h2 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Ejecución</h2>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Control Mensual</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Control Mensual</p>
+                        <button
+                            onClick={() => setShowChart(!showChart)}
+                            className="p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-all text-slate-400"
+                            title={showChart ? "Ver Lista" : "Ver Gráfico"}
+                        >
+                            {showChart ? <List size={14} /> : <PieIcon size={14} />}
+                        </button>
+                    </div>
                 </div>
                 <div className="flex items-center gap-4 bg-slate-50/50 dark:bg-white/5 p-1 rounded-2xl mr-6">
                     <button
@@ -56,6 +69,18 @@ export const MonthlyControl: React.FC<MonthlyControlProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 space-y-8 scrollbar-hide pb-6">
+                {showChart && (
+                    <div className="space-y-4">
+                        <div className="bg-slate-50/50 dark:bg-white/5 rounded-3xl p-4 border border-slate-100 dark:border-white/5">
+                            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Distribución de Gastos</h4>
+                            <CategoryChart items={monthlyControl} />
+                        </div>
+                        <div className="bg-slate-50/50 dark:bg-white/5 rounded-3xl p-4 border border-slate-100 dark:border-white/5">
+                            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Resumen Flujo</h4>
+                            <CashFlowSummary items={monthlyControl} />
+                        </div>
+                    </div>
+                )}
                 {['Ingresos', 'Gastos Fijos', 'Gastos Variables', 'Ahorro'].map((groupType) => {
                     const groupItems = monthlyControl
                         .filter(item => item.type === groupType)

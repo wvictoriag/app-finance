@@ -4,7 +4,7 @@ import { formatCurrency, formatDate } from './formatters';
 describe('formatters', () => {
     beforeAll(() => {
         // Mock navigator for consistent locale in tests
-        Object.defineProperty(global.navigator, 'language', {
+        Object.defineProperty(globalThis.navigator, 'language', {
             value: 'es-CL',
             configurable: true
         });

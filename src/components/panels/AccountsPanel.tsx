@@ -11,6 +11,7 @@ interface AccountsPanelProps {
     onEditAccount: (account: Account) => void;
     onDeleteAccount: (id: string) => void;
     onReconcile: (account: Account) => void;
+    selectedAccountId?: string;
 }
 
 export const AccountsPanel: React.FC<AccountsPanelProps> = ({
@@ -20,7 +21,8 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
     onSelectAccount,
     onEditAccount,
     onDeleteAccount,
-    onReconcile
+    onReconcile,
+    selectedAccountId
 }) => {
     const totalEquity = accounts.reduce((sum, acc) => {
         return sum + Number(acc.balance);
@@ -104,12 +106,16 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = ({
                             mainLabel = 'Efectivo';
                             break;
                     }
+                    const isSelected = selectedAccountId === acc.id;
 
                     return (
                         <div
                             key={acc.id}
-                            className="group bg-white dark:bg-slate-900/40 p-4 rounded-3xl shadow-sm dark:shadow-things-dark hover:scale-[1.01] transition-all duration-500 relative cursor-pointer border border-slate-50 dark:border-white/5"
                             onClick={() => onSelectAccount(acc)}
+                            className={`group relative p-3 rounded-xl border transition-all duration-300 cursor-pointer ${isSelected
+                                ? 'bg-white dark:bg-white/10 border-blue-500/50 shadow-lg shadow-blue-500/10'
+                                : 'bg-white/40 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 shadow-sm'
+                                }`}
                         >
                             <div className="flex justify-between items-start mb-3">
                                 <div className="flex flex-col min-w-0">

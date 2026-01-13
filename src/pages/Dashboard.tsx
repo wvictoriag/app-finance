@@ -52,6 +52,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [reconcilingAccount, setReconcilingAccount] = useState<Account | null>(null);
     const [reconcileValue, setReconcileValue] = useState<string>('');
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState('all');
 
@@ -106,9 +107,13 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                 (filterType === 'expense' && Number(tx.amount) < 0 && !tx.destination_account_id) ||
                 (filterType === 'transfer' && tx.destination_account_id);
 
-            return matchesSearch && matchesType;
+            const matchesAccount = !selectedAccount ||
+                tx.account_id === selectedAccount.id ||
+                tx.destination_account_id === selectedAccount.id;
+
+            return matchesSearch && matchesType && matchesAccount;
         });
-    }, [transactions, searchQuery, filterType]);
+    }, [transactions, searchQuery, filterType, selectedAccount]);
 
     // Dark Mode
     const [darkMode, setDarkMode] = useState(() => {
@@ -315,9 +320,10 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                     <AccountsPanel
                                         accounts={accounts}
                                         transactionSums={transactionSums}
+                                        selectedAccountId={selectedAccount?.id}
                                         onAddAccount={() => setShowAccountModal(true)}
-                                        onSelectAccount={(acc) => setEditingAccount(acc)}
-                                        onEditAccount={(acc) => { setEditingAccount(acc); resetAcc(acc as any); setShowAccountModal(true); }}
+                                        onSelectAccount={(acc) => setSelectedAccount(selectedAccount?.id === acc.id ? null : acc)}
+                                        onEditAccount={(acc: Account) => { setEditingAccount(acc); resetAcc(acc as any); setShowAccountModal(true); }}
                                         onDeleteAccount={deleteAccount}
                                         onReconcile={(acc) => { setReconcilingAccount(acc); setReconcileValue(acc.balance.toString()); setShowReconcileModal(true); }}
                                     />
@@ -336,6 +342,8 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 <div className="lg:col-span-5 flex flex-col overflow-hidden">
                                     <TransactionsPanel
                                         transactions={filteredTransactions}
+                                        selectedAccount={selectedAccount}
+                                        onClearAccountFilter={() => setSelectedAccount(null)}
                                         onEdit={(tx: Transaction) => {
                                             setEditingTransaction(tx);
                                             reset({

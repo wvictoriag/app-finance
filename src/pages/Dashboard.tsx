@@ -283,24 +283,26 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Guapacha Finance Intelligence <span className="text-emerald-500 ml-2">v2.0</span></p>
                     </div>
 
-                    <div className="flex items-center gap-6 lg:gap-12 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-                        <div className="flex flex-col shrink-0">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Patrimonio Neto</span>
-                            <span className="text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tighter">
-                                {formatCurrency(accounts.reduce((sum, acc) => sum + Number(acc.balance), 0))}
-                            </span>
-                        </div>
-                        <div className="flex flex-col shrink-0">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Ingresos Mes</span>
-                            <span className="text-lg lg:text-xl font-black text-emerald-500 tracking-tighter">
-                                {formatCurrency(monthTx?.filter(tx => Number(tx.amount) > 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0)}
-                            </span>
-                        </div>
-                        <div className="flex flex-col shrink-0">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Gastos Mes</span>
-                            <span className="text-lg lg:text-xl font-black text-rose-500 tracking-tighter">
-                                {formatCurrency(Math.abs(monthTx?.filter(tx => Number(tx.amount) < 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0))}
-                            </span>
+                    <div className="flex items-center gap-6 lg:gap-12">
+                        <div className="flex items-center gap-6 lg:gap-12 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                            <div className="flex flex-col shrink-0">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Patrimonio Neto</span>
+                                <span className="text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                    {formatCurrency(accounts.reduce((sum, acc) => sum + Number(acc.balance), 0))}
+                                </span>
+                            </div>
+                            <div className="flex flex-col shrink-0">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Ingresos Mes</span>
+                                <span className="text-lg lg:text-xl font-black text-emerald-500 tracking-tighter">
+                                    {formatCurrency(monthTx?.filter(tx => Number(tx.amount) > 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0)}
+                                </span>
+                            </div>
+                            <div className="flex flex-col shrink-0">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Gastos Mes</span>
+                                <span className="text-lg lg:text-xl font-black text-rose-500 tracking-tighter">
+                                    {formatCurrency(Math.abs(monthTx?.filter(tx => Number(tx.amount) < 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0))}
+                                </span>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-4 border-l border-slate-200 dark:border-white/5 pl-6 lg:pl-12">

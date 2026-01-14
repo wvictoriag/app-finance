@@ -1,7 +1,7 @@
-import React from 'react';
-import { Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { Pencil, Trash2, ArrowRightLeft, Filter, X } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import type { Transaction } from '../../types';
+import type { Transaction, Category } from '../../types';
 
 interface TransactionsPanelProps {
     transactions: Transaction[];
@@ -13,6 +13,15 @@ interface TransactionsPanelProps {
     onDelete: (id: string) => void;
     selectedAccount?: any;
     onClearAccountFilter?: () => void;
+
+    // Advanced Filters
+    categories: Category[];
+    dateRange: { from: string; to: string };
+    setDateRange: (range: { from: string; to: string }) => void;
+    filterCategory: string;
+    setFilterCategory: (catId: string) => void;
+    amountRange: { min: string; max: string };
+    setAmountRange: (range: { min: string; max: string }) => void;
 }
 
 export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
@@ -24,8 +33,28 @@ export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
     onEdit,
     onDelete,
     selectedAccount,
-    onClearAccountFilter
+    onClearAccountFilter,
+
+    categories,
+    dateRange,
+    setDateRange,
+    filterCategory,
+    setFilterCategory,
+    amountRange,
+    setAmountRange
 }) => {
+    const [showFilters, setShowFilters] = useState(false);
+
+    const activeFiltersCount = [
+        dateRange.from, dateRange.to, filterCategory, amountRange.min, amountRange.max
+    ].filter(Boolean).length;
+
+    const clearFilters = () => {
+        setDateRange({ from: '', to: '' });
+        setFilterCategory('');
+        setAmountRange({ min: '', max: '' });
+    };
+
     return (
         <div className="h-full flex flex-col overflow-hidden">
             <div className="mb-6 px-4">
@@ -37,7 +66,7 @@ export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
                                 <div className="flex items-center gap-1.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">
                                     <span className="text-[9px] font-black uppercase tracking-tighter shrink-0">Filtrado por: {selectedAccount.name}</span>
                                     <button onClick={(e) => { e.stopPropagation(); onClearAccountFilter?.(); }} className="hover:text-blue-600 dark:hover:text-blue-300">
-                                        <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"></path></svg>
+                                        <X size={10} />
                                     </button>
                                 </div>
                             )}
@@ -46,16 +75,99 @@ export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
                     </div>
                 </div>
 
-                <div className="relative group mx-1">
-                    <input
-                        type="text"
-                        placeholder="Buscar..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-all font-medium"
-                    />
-                    <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-300 dark:text-slate-600 group-focus-within:text-accent-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <div className="flex gap-2">
+                    <div className="relative group flex-1">
+                        <input
+                            type="text"
+                            placeholder="Buscar..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-all font-medium"
+                        />
+                        <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-300 dark:text-slate-600 group-focus-within:text-accent-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center relative ${showFilters || activeFiltersCount > 0 ? 'bg-accent-primary text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+                    >
+                        <Filter size={18} />
+                        {activeFiltersCount > 0 && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] font-bold flex items-center justify-center border-2 border-white dark:border-slate-900">
+                                {activeFiltersCount}
+                            </div>
+                        )}
+                    </button>
                 </div>
+
+                {/* Advanced Filters Panel */}
+                {showFilters && (
+                    <div className="mt-4 p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filtros Avanzados</h3>
+                            {activeFiltersCount > 0 && (
+                                <button onClick={clearFilters} className="text-[10px] font-bold text-rose-500 hover:text-rose-600">
+                                    Limpiar Todo
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 ml-1">Desde</label>
+                                <input
+                                    type="date"
+                                    value={dateRange.from}
+                                    onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                                    className="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 ml-1">Hasta</label>
+                                <input
+                                    type="date"
+                                    value={dateRange.to}
+                                    onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                                    className="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-400 ml-1">Categoría</label>
+                            <select
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                            >
+                                <option value="">Todas</option>
+                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 ml-1">Monto Mín</label>
+                                <input
+                                    type="number"
+                                    placeholder="0"
+                                    value={amountRange.min}
+                                    onChange={(e) => setAmountRange({ ...amountRange, min: e.target.value })}
+                                    className="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 ml-1">Monto Máx</label>
+                                <input
+                                    type="number"
+                                    placeholder="Sin límite"
+                                    value={amountRange.max}
+                                    onChange={(e) => setAmountRange({ ...amountRange, max: e.target.value })}
+                                    className="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex gap-4 mt-6 px-1">
                     {['all', 'income', 'expense', 'transfer'].map((type) => (

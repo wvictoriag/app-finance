@@ -98,6 +98,11 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
         }));
     }, [categories, monthTx]);
 
+    // Advanced Filters State
+    const [dateRange, setDateRange] = useState({ from: '', to: '' });
+    const [filterCategory, setFilterCategory] = useState('');
+    const [amountRange, setAmountRange] = useState({ min: '', max: '' });
+
     const filteredTransactions = useMemo(() => {
         return transactions.filter(tx => {
             const s = searchQuery.toLowerCase();
@@ -115,9 +120,20 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                 tx.account_id === selectedAccount.id ||
                 tx.destination_account_id === selectedAccount.id;
 
-            return matchesSearch && matchesType && matchesAccount;
+            // Advanced Filters
+            const txDate = tx.date;
+            const matchesDate = (!dateRange.from || txDate >= dateRange.from) &&
+                (!dateRange.to || txDate <= dateRange.to);
+
+            const matchesCategory = !filterCategory || tx.category_id === filterCategory;
+
+            const absAmount = Math.abs(Number(tx.amount));
+            const matchesAmount = (!amountRange.min || absAmount >= Number(amountRange.min)) &&
+                (!amountRange.max || absAmount <= Number(amountRange.max));
+
+            return matchesSearch && matchesType && matchesAccount && matchesDate && matchesCategory && matchesAmount;
         });
-    }, [transactions, searchQuery, filterType, selectedAccount]);
+    }, [transactions, searchQuery, filterType, selectedAccount, dateRange, filterCategory, amountRange]);
 
     // Dark Mode
     const [darkMode, setDarkMode] = useState(() => {
@@ -385,6 +401,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                     <TransactionsPanel
                                         transactions={filteredTransactions}
                                         selectedAccount={selectedAccount}
+                                        categories={categories}
                                         onClearAccountFilter={() => setSelectedAccount(null)}
                                         onEdit={(tx: Transaction) => {
                                             setEditingTransaction(tx);
@@ -400,6 +417,14 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                         setSearchQuery={setSearchQuery}
                                         filterType={filterType}
                                         setFilterType={setFilterType}
+
+                                        // Advanced Filter Props
+                                        dateRange={dateRange}
+                                        setDateRange={setDateRange}
+                                        filterCategory={filterCategory}
+                                        setFilterCategory={setFilterCategory}
+                                        amountRange={amountRange}
+                                        setAmountRange={setAmountRange}
                                     />
                                     <button onClick={() => { setEditingTransaction(null); reset({ date: new Date().toISOString().split('T')[0], type: 'expense', amount: 0 }); setShowModal(true); }} className="absolute bottom-10 right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
                                         <Plus size={32} strokeWidth={3} />

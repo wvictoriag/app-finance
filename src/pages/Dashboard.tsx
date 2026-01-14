@@ -447,19 +447,37 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 />
                             </motion.div>
                         ) : currentView === 'calendar' ? (
-                            <motion.div
-                                key="calendar"
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.98 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex-1 overflow-hidden"
+import {SavingsGoals} from '../components/views/SavingsGoals';
+
+                        // ... inside Dashboard imports
+
+                        import {CalendarView} from '../components/views/CalendarView';
+
+                        // ... inside renderContent ...
+
+                        if (currentView === 'calendar') return <CalendarView transactions={filteredTransactions} />;
+                        if (currentView === 'goals') return <SavingsGoals />;
+
+                        if (currentView === 'stats') {
+
+// ... inside Sidebar buttons ...
+
+                            <button
+                                onClick={() => setCurrentView('calendar')}
+                                className={`p-3 rounded-2xl transition-all duration-300 group relative ${currentView === 'calendar' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/40' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-white/5'}`}
+                                title="Calendario"
                             >
-                                <CalendarView
-                                    transactions={filteredTransactions}
-                                />
-                            </motion.div>
-                        ) : currentView === 'stats' ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={currentView === 'calendar' ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:scale-110"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                {currentView === 'calendar' && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white/20 rounded-l-full"></div>}
+                            </button>
+                            <button
+                                onClick={() => setCurrentView('goals')}
+                                className={`p-3 rounded-2xl transition-all duration-300 group relative ${currentView === 'goals' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/40' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-white/5'}`}
+                                title="Metas de Ahorro"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={currentView === 'goals' ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:scale-110"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-2c1 .5 1.6 1 2 1 2.2 0 4-1.8 4-5.6 0-1.1-.2-4.9-5-7.3l-1-.6c.3-1.2.9-3.5-3-3.6Z"/><path d="M6 14v4"/><path d="M10 13a2 2 0 1 0 4 0"/></svg>
+                                {currentView === 'goals' && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white/20 rounded-l-full"></div>}
+                            </button>
                             <motion.div
                                 key="stats"
                                 initial={{ opacity: 0, scale: 0.98 }}

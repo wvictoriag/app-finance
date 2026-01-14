@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Pencil, Trash2, ArrowRightLeft, Filter, X } from 'lucide-react';
+import { Pencil, Trash2, ArrowRightLeft, Filter, X, Download } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import type { Transaction, Category } from '../../types';
+import { exportTransactionsToCSV } from '../../utils/exportUtils';
 
 interface TransactionsPanelProps {
     transactions: Transaction[];
@@ -73,6 +74,13 @@ export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
                         </div>
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{selectedAccount ? 'Mostrando historial de cuenta' : 'Historial Reciente'}</p>
                     </div>
+                    <button
+                        onClick={() => exportTransactionsToCSV(transactions)}
+                        className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
+                        title="Exportar a CSV"
+                    >
+                        <Download size={16} />
+                    </button>
                 </div>
 
                 <div className="flex gap-2">

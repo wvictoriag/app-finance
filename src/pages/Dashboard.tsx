@@ -30,6 +30,12 @@ import { SavingsGoals } from '../components/views/SavingsGoals';
 import type { Account, Category, Transaction, MonthlyControlItem } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Modals
+import { TransactionModal } from '../components/modals/TransactionModal';
+import { AccountModal } from '../components/modals/AccountModal';
+import { CategoryModal } from '../components/modals/CategoryModal';
+import { ReconcileModal } from '../components/modals/ReconcileModal';
+
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const { user } = useAuth();
     const { settings } = useRegion();
@@ -502,217 +508,74 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
             </div>
 
             {/* Transaction Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-md w-full p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-white">{editingTransaction ? 'Editar' : 'Nueva'} Transacción</h3>
-                            <button onClick={() => setShowModal(false)} className="bg-slate-100 dark:bg-slate-700 p-2 rounded-full">✕</button>
-                        </div>
-                        <form onSubmit={onSubmitTransaction} className="space-y-4">
-                            <select {...register('account_id')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3">
-                                <option value="">Cuenta...</option>
-                                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                            </select>
-                            {errors.account_id && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errors.account_id.message}</p>}
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <input type="date" {...register('date')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
-                                <select {...register('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3">
-                                    <option value="expense">Egreso</option>
-                                    <option value="income">Ingreso</option>
-                                    <option value="transfer">Transferencia</option>
-                                </select>
-                            </div>
-
-                            {txType === 'transfer' ? (
-                                <select {...register('destination_account_id')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3">
-                                    <option value="">Cuenta Destino...</option>
-                                    {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                                </select>
-                            ) : (
-                                <select {...register('category_id')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3">
-                                    <option value="">Categoría...</option>
-                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                            )}
-
-                            <input type="number" step="any" {...register('amount')} placeholder="Monto" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-4 text-xl font-bold" />
-                            {errors.amount && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errors.amount.message}</p>}
-
-                            <input {...register('description')} placeholder="Descripción" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
-
-                            <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg transition-transform active:scale-95">Guardar</button>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <TransactionModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onSubmit={onSubmitTransaction}
+                register={register}
+                errors={errors}
+                accounts={accounts}
+                categories={categories}
+                txType={txType}
+                isEditing={!!editingTransaction}
+            />
 
             {/* Account Modal */}
-            {showAccountModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-white">{editingAccount ? 'Editar' : 'Nueva'} Cuenta</h3>
-                            <button onClick={() => { setShowAccountModal(false); setEditingAccount(null); }} className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-500 rounded-full w-8 h-8 flex items-center justify-center">✕</button>
-                        </div>
-                        <form onSubmit={handleAccSubmit(async (data: AccountFormData) => {
-                            try {
-                                if (editingAccount) await updateAccount({ id: editingAccount.id, updates: data });
-                                else await createAccount(data);
-                                setShowAccountModal(false);
-                                setEditingAccount(null);
-                                toast.success('Cuenta guardada');
-                            } catch (err: any) { toast.error(err.message); }
-                        })} className="space-y-4">
-                            <input {...regAcc('name')} placeholder="Nombre Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
-                            {errorsAcc.name && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsAcc.name.message}</p>}
-                            <div className="grid grid-cols-2 gap-4">
-                                <input {...regAcc('bank')} placeholder="Banco" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
-                                <input {...regAcc('account_number')} placeholder="N° Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
-                            </div>
-
-                            {/* Tax Exemption (CO) */}
-                            {settings.countryCode === 'CO' && (
-                                <div className="flex items-center gap-2 p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100 dark:border-indigo-500/20 mb-4">
-                                    <input type="checkbox" id="is_tax_exempt" {...regAcc('is_tax_exempt')} className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
-                                    <label htmlFor="is_tax_exempt" className="text-xs font-bold text-indigo-700 dark:text-indigo-400 select-none cursor-pointer">Cuenta Exenta 4x1000</label>
-                                </div>
-                            )}
-
-                            <select {...regAcc('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm">
-                                <option value="Checking">Cuenta Corriente (CC)</option>
-                                <option value="Vista">Cuenta Vista (CV)</option>
-                                <option value="Savings">Cuenta de Ahorros (CA)</option>
-                                <option value="Credit">Tarjeta de Crédito (TC)</option>
-                                <option value="CreditLine">Línea de Crédito (LC)</option>
-                                <option value="Cash">Efectivo</option>
-                                <option value="Receivable">Cuenta por Cobrar</option>
-                                <option value="Payable">Cuenta por Pagar</option>
-                                <option value="Investment">Inversión (Acciones/Crypto)</option>
-                                <option value="Asset">Activo (Vehículo/Propiedad)</option>
-                            </select>
-                            {errorsAcc.type && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsAcc.type.message}</p>}
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase ml-2">Saldo Inicial</label>
-                                    <input {...regAcc('initial_balance')} type="number" step="any" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase ml-2">Saldo Actual</label>
-                                    <input {...regAcc('balance')} type="number" step="any" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold" />
-                                </div>
-                            </div>
-                            <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg transition-all">Guardar</button>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <AccountModal
+                isOpen={showAccountModal}
+                onClose={() => { setShowAccountModal(false); setEditingAccount(null); }}
+                onSubmit={async (data: AccountFormData) => {
+                    try {
+                        if (editingAccount) await updateAccount({ id: editingAccount.id, updates: data });
+                        else await createAccount(data);
+                        setShowAccountModal(false);
+                        setEditingAccount(null);
+                        toast.success('Cuenta guardada');
+                    } catch (err: any) { toast.error(err.message); }
+                }}
+                register={regAcc}
+                handleSubmit={handleAccSubmit}
+                errors={errorsAcc}
+                isEditing={!!editingAccount}
+            />
 
             {/* Category Modal */}
-            {showCategoryModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-white">Gestionar Categorías</h3>
-                            <button onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }} className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-500 rounded-full w-8 h-8 flex items-center justify-center">✕</button>
-                        </div>
-                        <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
-                            <div className="flex-1 overflow-y-auto p-4 border-r border-slate-100 dark:border-slate-700 space-y-4">
-                                {['Ingresos', 'Gastos Fijos', 'Gastos Variables', 'Ahorro'].map(type => (
-                                    <div key={type}>
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">{type}</h4>
-                                        <div className="grid grid-cols-1 gap-1">
-                                            {categories.filter(c => c.type === type).map(cat => (
-                                                <button key={cat.id} onClick={() => { setEditingCategory(cat); }} className={`w-full text-left px-4 py-2 rounded-xl text-sm transition-all flex justify-between items-center ${editingCategory?.id === cat.id ? 'bg-blue-600 text-white' : 'hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
-                                                    <span>{cat.name}</span>
-                                                    <span className="text-[10px] opacity-70">{formatCurrency(cat.monthly_budget)}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="w-full md:w-80 p-6 bg-slate-50 dark:bg-slate-900/50 shrink-0">
-                                <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-4">{editingCategory ? 'Editar' : 'Nueva'} Categoría</h4>
-                                <form onSubmit={handleCatSubmit(async (data: CategoryFormData) => {
-                                    try {
-                                        let b = data.monthly_budget;
-                                        if (['Gastos Fijos', 'Gastos Variables', 'Ahorro'].includes(data.type)) b = -Math.abs(b);
-                                        const payload = { ...data, monthly_budget: b };
+            <CategoryModal
+                isOpen={showCategoryModal}
+                onClose={() => { setShowCategoryModal(false); setEditingCategory(null); }}
+                onSubmit={async (data: CategoryFormData) => {
+                    try {
+                        let b = data.monthly_budget;
+                        if (['Gastos Fijos', 'Gastos Variables', 'Ahorro'].includes(data.type)) b = -Math.abs(b);
+                        const payload = { ...data, monthly_budget: b };
 
-                                        if (editingCategory) await updateCategory({ id: editingCategory.id, updates: payload });
-                                        else await createCategory(payload);
-                                        setEditingCategory(null);
-                                        resetCat();
-                                        toast.success('Categoría guardada');
-                                    } catch (err: any) { toast.error(err.message); }
-                                })} className="space-y-4">
-                                    <input {...regCat('name')} placeholder="Nombre" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm" />
-                                    {errorsCat.name && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsCat.name.message}</p>}
-                                    <select {...regCat('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm">
-                                        <option value="Ingresos">Ingreso</option>
-                                        <option value="Gastos Fijos">Gasto Fijo</option>
-                                        <option value="Gastos Variables">Gasto Variable</option>
-                                        <option value="Ahorro">Ahorro</option>
-                                    </select>
-                                    <input {...regCat('monthly_budget')} step="any" type="number" placeholder="Presupuesto" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 p-3 text-sm" />
-                                    {errorsCat.monthly_budget && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsCat.monthly_budget.message}</p>}
-                                    <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold">Guardar</button>
-                                    {editingCategory && (
-                                        <button type="button" onClick={() => { if (confirm('Eliminar?')) deleteCategory(editingCategory.id); setEditingCategory(null); }} className="w-full py-3 text-rose-500 font-bold border border-rose-100 dark:border-rose-900 rounded-xl mt-2">Eliminar</button>
-                                    )}
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        if (editingCategory) await updateCategory({ id: editingCategory.id, updates: payload });
+                        else await createCategory(payload);
+                        setEditingCategory(null);
+                        resetCat();
+                        toast.success('Categoría guardada');
+                    } catch (err: any) { toast.error(err.message); }
+                }}
+                onDelete={async (id: string) => {
+                    await deleteCategory(id);
+                }}
+                register={regCat}
+                handleSubmit={handleCatSubmit}
+                errors={errorsCat}
+                categories={categories}
+                editingCategory={editingCategory}
+                setEditingCategory={setEditingCategory}
+            />
 
             {/* Quick Reconcile Modal */}
-            {showReconcileModal && reconcilingAccount && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-6">
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tighter">Reconciliar Saldo</h3>
-                        <p className="text-xs text-slate-400 mb-4">Ingresa el saldo real reportado por tu institución para <span className="font-bold text-slate-600 dark:text-slate-300">{reconcilingAccount.name}</span>.</p>
-
-                        <div className="space-y-4">
-                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Actual en App</span>
-                                <div className="text-lg font-bold text-slate-600 dark:text-slate-400">{formatCurrency(reconcilingAccount.balance)}</div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nuevo Saldo Real</label>
-                                <input
-                                    type="number"
-                                    step="any"
-                                    value={reconcileValue}
-                                    onChange={(e) => setReconcileValue(e.target.value)}
-                                    className="w-full rounded-2xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-4 text-2xl font-black tracking-tighter"
-                                    autoFocus
-                                />
-                            </div>
-
-                            <div className="flex gap-3 pt-2">
-                                <button
-                                    onClick={() => setShowReconcileModal(false)}
-                                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleReconcile}
-                                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30"
-                                >
-                                    Actualizar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ReconcileModal
+                isOpen={showReconcileModal}
+                onClose={() => setShowReconcileModal(false)}
+                onReconcile={handleReconcile}
+                account={reconcilingAccount}
+                reconcileValue={reconcileValue}
+                setReconcileValue={setReconcileValue}
+            />
         </div>
     );
 }

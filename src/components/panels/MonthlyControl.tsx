@@ -113,28 +113,31 @@ export const MonthlyControl: React.FC<MonthlyControlProps> = ({
                                         const budget = Math.abs(Number(item.monthly_budget));
                                         const percent = budget > 0 ? (real / budget) * 100 : 0;
 
+                                        // Determine color based on percent
+                                        let colorClass = 'bg-emerald-500';
+                                        if (percent > 100) colorClass = 'bg-rose-600 animate-pulse';
+                                        else if (percent > 90) colorClass = 'bg-rose-500';
+                                        else if (percent > 70) colorClass = 'bg-amber-400';
+
                                         return (
                                             <div key={item.id} className="space-y-2 group/item">
                                                 <div className="flex justify-between items-end">
                                                     <div>
                                                         <p className="text-sm font-bold text-slate-900 dark:text-white mb-0.5">{item.name}</p>
-                                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                                                            Presupuesto: {formatCurrency(item.monthly_budget)}
-                                                        </p>
+                                                        <span className={`text-[10px] font-bold ${real > budget ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                            {formatCurrency(real)} / {formatCurrency(budget)}
+                                                        </span>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-sm font-black tabular-nums text-slate-900 dark:text-white">{formatCurrency(item.real)}</p>
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{Math.round(percent)}%</p>
                                                     </div>
                                                 </div>
-                                                <div className="h-1 w-full bg-slate-50 dark:bg-white/5 rounded-full overflow-hidden">
+                                                <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                                     <div
-                                                        className={`h-full rounded-full transition-all duration-1000 ${groupType === 'Ingresos' || groupType === 'Ahorro'
-                                                            ? 'bg-emerald-500'
-                                                            : (percent > 100 ? 'bg-rose-500' : 'bg-accent-primary')
-                                                            }`}
+                                                        className={`h-full rounded-full transition-all duration-500 ${colorClass}`}
                                                         style={{ width: `${Math.min(percent, 100)}%` }}
-                                                    ></div>
+                                                    />
                                                 </div>
                                             </div>
                                         );

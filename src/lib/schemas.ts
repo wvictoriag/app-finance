@@ -28,6 +28,7 @@ export const accountSchema = z.object({
     balance: z.coerce.number(),
     credit_limit: z.coerce.number().default(0),
     initial_balance: z.coerce.number().default(0),
+    is_tax_exempt: z.boolean().default(false).optional(),
 });
 
 export type AccountFormData = z.infer<typeof accountSchema>;

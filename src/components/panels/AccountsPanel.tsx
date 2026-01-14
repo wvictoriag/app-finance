@@ -1,7 +1,7 @@
-import React from 'react';
 import { Plus, Pencil, Trash2, CheckCircle2, AlertCircle, Scale } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import type { Account } from '../../types';
+import { useRegion } from '../../contexts/RegionContext';
 
 interface AccountsPanelProps {
     accounts: Account[];

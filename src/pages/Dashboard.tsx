@@ -17,17 +17,20 @@ import { useTransactionSums } from '../hooks/useTransactionSums';
 import { useCategories } from '../hooks/useCategories';
 import toast from 'react-hot-toast';
 import { RegionSelector } from '../components/RegionSelector';
+import { useRegion } from '../contexts/RegionContext';
 
 // Modular Components
 import { AccountsPanel } from '../components/panels/AccountsPanel';
 import { TransactionsPanel } from '../components/panels/TransactionsPanel';
 import { MonthlyControl } from '../components/panels/MonthlyControl';
 import ProjectionsView from './ProjectionsView';
+import { StatsOverview } from '../components/charts/StatsOverview';
 import type { Account, Category, Transaction, MonthlyControlItem } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const { user } = useAuth();
+    const { settings } = useRegion();
     const [currentView, setCurrentView] = useState(view);
     const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'checking'>('checking');
 
@@ -216,6 +219,26 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                 toast.success('Transacción actualizada');
             } else {
                 await addTransaction(payload);
+
+                // 4x1000 Tax Logic (Colombia Only)
+                if (settings.countryCode === 'CO' && (data.type === 'expense' || data.type === 'transfer')) {
+                    const sourceAccount = accounts.find(a => a.id === data.account_id);
+                    if (sourceAccount && !sourceAccount.is_tax_exempt) {
+                        const taxAmount = Math.round(Number(Math.abs(data.amount)) * 0.004);
+                        if (taxAmount > 0) {
+                            await addTransaction({
+                                account_id: data.account_id,
+                                date: data.date,
+                                amount: -taxAmount,
+                                description: 'Impuesto GMF (4x1000)',
+                                category_id: categories.find(c => c.name.includes('Gastos Fijos') || c.type === 'Gastos Fijos')?.id,
+                                destination_account_id: null
+                            });
+                            toast('Impuesto 4x1000 aplicado', { icon: '💸' });
+                        }
+                    }
+                }
+
                 toast.success('Transacción creada');
             }
 
@@ -251,6 +274,10 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                         <BarChart3 size={22} />
                         <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Simula</span>
                     </button>
+                    <button onClick={() => setCurrentView('stats')} className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-1 ${currentView === 'stats' ? 'bg-slate-100 dark:bg-white/5 text-purple-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
+                        <PieChart size={22} />
+                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Stats</span>
+                    </button>
                 </div>
                 <div className="flex lg:flex-col lg:mt-auto gap-2 lg:gap-6">
                     <button onClick={() => setDarkMode(!darkMode)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all flex flex-col items-center gap-1">
@@ -273,7 +300,8 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3">
                             <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
-                                {currentView === 'dashboard' ? 'Hola, ' + (user?.user_metadata?.alias || user?.email?.split('@')[0]) : 'Simulaciones'}
+                                {currentView === 'dashboard' ? 'Hola, ' + (user?.user_metadata?.alias || user?.email?.split('@')[0]) :
+                                    currentView === 'projections' ? 'Simulaciones' : 'Estadísticas'}
                             </h1>
                             <div className={`h-2.5 w-2.5 rounded-full mt-1 ${connectionStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' :
                                 connectionStatus === 'offline' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' :
@@ -393,6 +421,20 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                     categories={categories}
                                 />
                             </motion.div>
+                        ) : currentView === 'stats' ? (
+                            <motion.div
+                                key="stats"
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <StatsOverview
+                                    transactions={transactions}
+                                    categories={categories}
+                                />
+                            </motion.div>
                         ) : null}
                     </AnimatePresence>
                 </main>
@@ -468,6 +510,15 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 <input {...regAcc('bank')} placeholder="Banco" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
                                 <input {...regAcc('account_number')} placeholder="N° Cuenta" className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3" />
                             </div>
+
+                            {/* Tax Exemption (CO) */}
+                            {settings.countryCode === 'CO' && (
+                                <div className="flex items-center gap-2 p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100 dark:border-indigo-500/20 mb-4">
+                                    <input type="checkbox" id="is_tax_exempt" {...regAcc('is_tax_exempt')} className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                                    <label htmlFor="is_tax_exempt" className="text-xs font-bold text-indigo-700 dark:text-indigo-400 select-none cursor-pointer">Cuenta Exenta 4x1000</label>
+                                </div>
+                            )}
+
                             <select {...regAcc('type')} className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm">
                                 <option value="Checking">Cuenta Corriente (CC)</option>
                                 <option value="Vista">Cuenta Vista (CV)</option>
@@ -481,6 +532,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 <option value="Asset">Activo (Vehículo/Propiedad)</option>
                             </select>
                             {errorsAcc.type && <p className="text-rose-500 text-[10px] uppercase font-bold px-2">{errorsAcc.type.message}</p>}
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-400 uppercase ml-2">Saldo Inicial</label>

@@ -25,6 +25,7 @@ import { TransactionsPanel } from '../components/panels/TransactionsPanel';
 import { MonthlyControl } from '../components/panels/MonthlyControl';
 import ProjectionsView from './ProjectionsView';
 import { StatsOverview } from '../components/charts/StatsOverview';
+import { CalendarView } from '../components/views/CalendarView';
 import type { Account, Category, Transaction, MonthlyControlItem } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -431,7 +432,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                     </button>
                                 </div>
                             </motion.div>
-                        ) : currentView === 'projections' ? (
                             <motion.div
                                 key="projections"
                                 initial={{ opacity: 0, scale: 0.98 }}
@@ -444,6 +444,19 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                     transactions={transactions}
                                     accounts={accounts}
                                     categories={categories}
+                                />
+                            </motion.div>
+                        ) : currentView === 'calendar' ? (
+                            <motion.div
+                                key="calendar"
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <CalendarView
+                                    transactions={filteredTransactions}
                                 />
                             </motion.div>
                         ) : currentView === 'stats' ? (

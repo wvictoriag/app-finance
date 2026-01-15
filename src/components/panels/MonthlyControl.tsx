@@ -1,24 +1,26 @@
 import React, { useState, memo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PieChart as PieIcon, List, AlertTriangle, AlertCircle } from 'lucide-react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatCurrency } from '../../utils/formatters';
 import type { MonthlyControlItem } from '../../types';
 import { CategoryChart } from '../charts/CategoryChart';
 import { CashFlowSummary } from '../charts/CashFlowSummary';
-import { PieChart as PieIcon, List } from 'lucide-react';
+import { useDashboard } from '../../contexts/DashboardContext';
+import { useDashboardUI } from '../../contexts/DashboardUIContext';
 
 interface MonthlyControlProps {
-    monthlyControl: MonthlyControlItem[];
-    selectedDate: Date;
-    setSelectedDate: (date: Date) => void;
 }
 
-const MonthlyControlComponent: React.FC<MonthlyControlProps> = ({
-    monthlyControl,
-    selectedDate,
-    setSelectedDate
-}) => {
+const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
+    const {
+        selectedDate,
+        setSelectedDate
+    } = useDashboardUI();
+
+    const {
+        monthlyControl
+    } = useDashboard();
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
         'Ingresos': true,
         'Gastos Fijos': true,
@@ -120,22 +122,40 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = ({
                                         else if (percent > 70) colorClass = 'bg-amber-400';
 
                                         return (
-                                            <div key={item.id} className="space-y-2 group/item">
-                                                <div className="flex justify-between items-end">
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-900 dark:text-white mb-0.5">{item.name}</p>
+                                            <div key={item.id} className={`p-3 rounded-2xl border transition-all duration-300 ${percent > 100 ? 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200/50 dark:border-rose-500/20' : 'bg-transparent border-transparent'}`}>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</p>
+                                                            {percent > 100 && (
+                                                                <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 animate-bounce">
+                                                                    <AlertTriangle size={12} strokeWidth={3} />
+                                                                    <span className="text-[8px] font-black uppercase tracking-tighter">Excedido</span>
+                                                                </div>
+                                                            )}
+                                                            {percent > 90 && percent <= 100 && (
+                                                                <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400">
+                                                                    <AlertCircle size={12} strokeWidth={3} />
+                                                                    <span className="text-[8px] font-black uppercase tracking-tighter">Límite</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                         <span className={`text-[10px] font-bold ${real > budget ? 'text-rose-500' : 'text-slate-400'}`}>
                                                             {formatCurrency(real)} / {formatCurrency(budget)}
                                                         </span>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <p className="text-sm font-black tabular-nums text-slate-900 dark:text-white">{formatCurrency(item.real)}</p>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{Math.round(percent)}%</p>
+                                                    <div className="text-right shrink-0 ml-4">
+                                                        <p className={`text-sm font-black tabular-nums ${real > budget ? 'text-rose-500' : 'text-slate-900 dark:text-white'}`}>
+                                                            {formatCurrency(item.real)}
+                                                        </p>
+                                                        <p className={`text-[10px] font-black uppercase tracking-widest ${percent > 100 ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                            {Math.round(percent)}%
+                                                        </p>
                                                     </div>
                                                 </div>
-                                                <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                <div className="h-2 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden">
                                                     <div
-                                                        className={`h-full rounded-full transition-all duration-500 ${colorClass}`}
+                                                        className={`h-full rounded-full transition-all duration-700 ease-out ${colorClass}`}
                                                         style={{ width: `${Math.min(percent, 100)}%` }}
                                                     />
                                                 </div>

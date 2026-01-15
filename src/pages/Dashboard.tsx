@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
@@ -39,25 +40,46 @@ const AccountModal = lazy(() => import('../components/modals/AccountModal').then
 const CategoryModal = lazy(() => import('../components/modals/CategoryModal').then(m => ({ default: m.CategoryModal })));
 const ReconcileModal = lazy(() => import('../components/modals/ReconcileModal').then(m => ({ default: m.ReconcileModal })));
 
+import { DashboardProvider, useDashboard } from '../contexts/DashboardContext';
+import { DashboardUIProvider, useDashboardUI } from '../contexts/DashboardUIContext';
+
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
+    return (
+        <DashboardUIProvider initialView={view}>
+            <DashboardProvider>
+                <DashboardContent />
+            </DashboardProvider>
+        </DashboardUIProvider>
+    );
+}
+
+function DashboardContent() {
     const { user } = useAuth();
     const { settings } = useRegion();
-    const [currentView, setCurrentView] = useState(view);
+    const {
+        currentView, setCurrentView,
+        selectedDate, setSelectedDate,
+        selectedAccount, setSelectedAccount,
+        searchQuery, setSearchQuery,
+        filterType, setFilterType,
+        dateRange, setDateRange,
+        filterCategory, setFilterCategory,
+        amountRange, setAmountRange
+    } = useDashboardUI();
+
+    const {
+        accounts, loadingAccs, deleteAccount,
+        transactions, loadingRecent, deleteTransaction,
+        categories, loadingCats,
+        loadingMonth,
+        transactionSums,
+        monthlyControl,
+        filteredTransactions,
+        monthIncome, monthExpenses, netWorth
+    } = useDashboard();
     const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'checking'>('checking');
 
-    // Month/Year Navigation
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const selectedMonth = selectedDate.getMonth() + 1;
-    const selectedYear = selectedDate.getFullYear();
-
-    // TanStack Query Hooks
-    const { accounts, isLoading: loadingAccs, deleteAccount } = useAccounts();
-    const { transactions, isLoading: loadingRecent, deleteTransaction } = useTransactions(100);
-    const { data: transactionSumsData, isLoading: loadingSums } = useTransactionSums();
-    const { categories, isLoading: loadingCats } = useCategories();
-    const { data: monthTx, isLoading: loadingMonth } = useMonthlyTransactions(selectedMonth, selectedYear);
-
-    // Local UI State
+    // Local UI State (Keep these for now as they are specific to this view's modals)
     const [showModal, setShowModal] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -66,67 +88,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const [showReconcileModal, setShowReconcileModal] = useState(false);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [reconcilingAccount, setReconcilingAccount] = useState<Account | null>(null);
-    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filterType, setFilterType] = useState('all');
-
-
-
-
-    const transactionSums = transactionSumsData || {};
-
-    const monthlyControl = useMemo((): MonthlyControlItem[] => {
-        if (!categories || !monthTx) return [];
-        const totals = (monthTx || []).reduce((acc: Record<string, number>, tx) => {
-            if (tx.category_id) {
-                acc[tx.category_id] = (acc[tx.category_id] || 0) + Number(tx.amount);
-            }
-            return acc;
-        }, {});
-
-        return categories.map(cat => ({
-            ...cat,
-            real: totals[cat.id] || 0,
-            difference: (totals[cat.id] || 0) - (Number(cat.monthly_budget) || 0)
-        }));
-    }, [categories, monthTx]);
-
-    // Advanced Filters State
-    const [dateRange, setDateRange] = useState({ from: '', to: '' });
-    const [filterCategory, setFilterCategory] = useState('');
-    const [amountRange, setAmountRange] = useState({ min: '', max: '' });
-
-    const filteredTransactions = useMemo(() => {
-        return transactions.filter(tx => {
-            const s = searchQuery.toLowerCase();
-            const matchesSearch = !searchQuery ||
-                tx.description?.toLowerCase().includes(s) ||
-                tx.categories?.name?.toLowerCase().includes(s) ||
-                tx.accounts?.name?.toLowerCase().includes(s);
-
-            const matchesType = filterType === 'all' ||
-                (filterType === 'income' && Number(tx.amount) > 0 && !tx.destination_account_id) ||
-                (filterType === 'expense' && Number(tx.amount) < 0 && !tx.destination_account_id) ||
-                (filterType === 'transfer' && tx.destination_account_id);
-
-            const matchesAccount = !selectedAccount ||
-                tx.account_id === selectedAccount.id ||
-                tx.destination_account_id === selectedAccount.id;
-
-            // Advanced Filters
-            const txDate = tx.date;
-            const matchesDate = (!dateRange.from || txDate >= dateRange.from) &&
-                (!dateRange.to || txDate <= dateRange.to);
-
-            const matchesCategory = !filterCategory || tx.category_id === filterCategory;
-
-            const absAmount = Math.abs(Number(tx.amount));
-            const matchesAmount = (!amountRange.min || absAmount >= Number(amountRange.min)) &&
-                (!amountRange.max || absAmount <= Number(amountRange.max));
-
-            return matchesSearch && matchesType && matchesAccount && matchesDate && matchesCategory && matchesAmount;
-        });
-    }, [transactions, searchQuery, filterType, selectedAccount, dateRange, filterCategory, amountRange]);
 
     // Dark Mode
     const [darkMode, setDarkMode] = useState(() => {
@@ -156,10 +117,10 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     }, []);
 
     // Selection handlers
-    useEffect(() => { setCurrentView(view); }, [view]);
+    // URL view sync is now in UIProvider (actually view isn't yet, let's keep it simple here for now)
 
     const handleAddAccount = useCallback(() => setShowAccountModal(true), []);
-    const handleSelectAccount = useCallback((acc: Account) => setSelectedAccount(prev => prev?.id === acc.id ? null : acc), []);
+    const handleSelectAccount = useCallback((acc: Account) => setSelectedAccount(selectedAccount?.id === acc.id ? null : acc), [selectedAccount, setSelectedAccount]);
     const handleEditAccount = useCallback((acc: Account) => {
         setEditingAccount(acc);
         setShowAccountModal(true);
@@ -259,19 +220,19 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                             <div className="flex flex-col shrink-0">
                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Patrimonio Neto</span>
                                 <span className="text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tighter">
-                                    {formatCurrency(accounts.reduce((sum, acc) => sum + Number(acc.balance), 0))}
+                                    {formatCurrency(netWorth)}
                                 </span>
                             </div>
                             <div className="flex flex-col shrink-0">
                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Ingresos Mes</span>
                                 <span className="text-lg lg:text-xl font-black text-emerald-500 tracking-tighter">
-                                    {formatCurrency(monthTx?.filter(tx => Number(tx.amount) > 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0)}
+                                    {formatCurrency(monthIncome)}
                                 </span>
                             </div>
                             <div className="flex flex-col shrink-0">
                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Gastos Mes</span>
                                 <span className="text-lg lg:text-xl font-black text-rose-500 tracking-tighter">
-                                    {formatCurrency(Math.abs(monthTx?.filter(tx => Number(tx.amount) < 0 && !tx.destination_account_id).reduce((sum, tx) => sum + Number(tx.amount), 0) || 0))}
+                                    {formatCurrency(monthExpenses)}
                                 </span>
                             </div>
                         </div>
@@ -303,50 +264,24 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 {/* Column 1: Accounts */}
                                 <div className="lg:col-span-3 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5">
                                     <AccountsPanel
-                                        accounts={accounts}
-                                        transactionSums={transactionSums}
-                                        selectedAccountId={selectedAccount?.id}
                                         onAddAccount={handleAddAccount}
-                                        onSelectAccount={handleSelectAccount}
                                         onEditAccount={handleEditAccount}
-                                        onDeleteAccount={deleteAccount}
                                         onReconcile={handleOpenReconcile}
                                     />
                                 </div>
 
                                 {/* Column 2: Monthly Control */}
                                 <div className="lg:col-span-4 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5">
-                                    <MonthlyControl
-                                        monthlyControl={monthlyControl}
-                                        selectedDate={selectedDate}
-                                        setSelectedDate={setSelectedDate}
-                                    />
+                                    <MonthlyControl />
                                 </div>
 
                                 {/* Column 3: Transactions */}
                                 <div className="lg:col-span-5 flex flex-col overflow-hidden">
                                     <TransactionsPanel
-                                        transactions={filteredTransactions}
-                                        selectedAccount={selectedAccount}
-                                        categories={categories}
-                                        onClearAccountFilter={() => setSelectedAccount(null)}
                                         onEdit={(tx: Transaction) => {
                                             setEditingTransaction(tx);
                                             setShowModal(true);
                                         }}
-                                        onDelete={deleteTransaction}
-                                        searchQuery={searchQuery}
-                                        setSearchQuery={setSearchQuery}
-                                        filterType={filterType}
-                                        setFilterType={setFilterType}
-
-                                        // Advanced Filter Props
-                                        dateRange={dateRange}
-                                        setDateRange={setDateRange}
-                                        filterCategory={filterCategory}
-                                        setFilterCategory={setFilterCategory}
-                                        amountRange={amountRange}
-                                        setAmountRange={setAmountRange}
                                     />
                                     <button onClick={() => { setEditingTransaction(null); setShowModal(true); }} className="absolute bottom-10 right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
                                         <Plus size={32} strokeWidth={3} />
@@ -432,8 +367,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                     <TransactionModal
                         isOpen={showModal}
                         onClose={useCallback(() => setShowModal(false), [])}
-                        accounts={accounts}
-                        categories={categories}
                         editingTransaction={editingTransaction}
                     />
                 </Suspense>
@@ -456,7 +389,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                     <CategoryModal
                         isOpen={showCategoryModal}
                         onClose={useCallback(() => { setShowCategoryModal(false); setEditingCategory(null); }, [])}
-                        categories={categories}
                         editingCategory={editingCategory}
                         setEditingCategory={setEditingCategory}
                     />

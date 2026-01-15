@@ -7,10 +7,11 @@ import { categorySchema, type CategoryFormData } from '../../lib/schemas';
 import { useCategories } from '../../hooks/useCategories';
 import toast from 'react-hot-toast';
 
+import { useDashboard } from '../../contexts/DashboardContext';
+
 interface CategoryModalProps {
     isOpen: boolean;
     onClose: () => void;
-    categories: Category[];
     editingCategory: Category | null;
     setEditingCategory: (cat: Category | null) => void;
 }
@@ -18,10 +19,10 @@ interface CategoryModalProps {
 export function CategoryModal({
     isOpen,
     onClose,
-    categories,
     editingCategory,
     setEditingCategory
 }: CategoryModalProps) {
+    const { categories } = useDashboard();
     const { createCategory, updateCategory, deleteCategory } = useCategories();
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm<CategoryFormData>({

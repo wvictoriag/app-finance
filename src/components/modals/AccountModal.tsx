@@ -7,6 +7,8 @@ import { useAccounts } from '../../hooks/useAccounts';
 import type { Account } from '../../types';
 import toast from 'react-hot-toast';
 
+import { useDashboard } from '../../contexts/DashboardContext';
+
 interface AccountModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -19,6 +21,7 @@ export function AccountModal({
     editingAccount
 }: AccountModalProps) {
     const { settings } = useRegion();
+    const { deleteAccount } = useDashboard(); // Just for consistency
     const { createAccount, updateAccount } = useAccounts();
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm<AccountFormData>({

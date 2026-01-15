@@ -27,8 +27,8 @@ export const exportTransactionsToCSV = (transactions: Transaction[]) => {
     // Combine headers and rows
     const csvContent = [headers.join(','), ...rows].join('\n');
 
-    // Create a Blob and download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Create a Blob and download (Adding UTF-8 BOM for Excel compatibility)
+    const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
 

@@ -2,29 +2,43 @@ import React, { memo } from 'react';
 import { Plus, Pencil, Trash2, CheckCircle2, AlertCircle, Scale } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import type { Account } from '../../types';
+import { useDashboard } from '../../contexts/DashboardContext';
+import { useDashboardUI } from '../../contexts/DashboardUIContext';
 import { useRegion } from '../../contexts/RegionContext';
 
 interface AccountsPanelProps {
-    accounts: Account[];
-    transactionSums: Record<string, number>;
     onAddAccount: () => void;
-    onSelectAccount: (account: Account) => void;
     onEditAccount: (account: Account) => void;
-    onDeleteAccount: (id: string) => void;
     onReconcile: (account: Account) => void;
-    selectedAccountId?: string;
 }
 
 const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
-    accounts,
-    transactionSums,
     onAddAccount,
-    onSelectAccount,
     onEditAccount,
-    onDeleteAccount,
-    onReconcile,
-    selectedAccountId
+    onReconcile
 }) => {
+    const {
+        selectedAccount,
+        setSelectedAccount
+    } = useDashboardUI();
+
+    const {
+        accounts,
+        transactionSums,
+        deleteAccount
+    } = useDashboard();
+
+    const onSelectAccount = (acc: Account) => {
+        setSelectedAccount(selectedAccount?.id === acc.id ? null : acc);
+    };
+
+    const onDeleteAccount = async (id: string) => {
+        if (window.confirm('¿Estás seguro de eliminar esta cuenta?')) {
+            await deleteAccount(id);
+        }
+    };
+
+    const selectedAccountId = selectedAccount?.id;
     const totalEquity = accounts.reduce((sum, acc) => {
         return sum + Number(acc.balance);
     }, 0);

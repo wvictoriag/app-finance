@@ -1,49 +1,40 @@
 import React, { useState, memo } from 'react';
 import { Pencil, Trash2, ArrowRightLeft, Filter, X, Download } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import type { Transaction, Category, Account } from '../../types';
+import type { Transaction } from '../../types';
 import { exportTransactionsToCSV } from '../../utils/exportUtils';
+import { useDashboard } from '../../contexts/DashboardContext';
+import { useDashboardUI } from '../../contexts/DashboardUIContext';
 
 interface TransactionsPanelProps {
-    transactions: Transaction[];
-    searchQuery: string;
-    setSearchQuery: (query: string) => void;
-    filterType: string;
-    setFilterType: (type: string) => void;
     onEdit: (transaction: Transaction) => void;
-    onDelete: (id: string) => void;
-    selectedAccount?: Account | null;
-    onClearAccountFilter?: () => void;
-
-    // Advanced Filters
-    categories: Category[];
-    dateRange: { from: string; to: string };
-    setDateRange: (range: { from: string; to: string }) => void;
-    filterCategory: string;
-    setFilterCategory: (catId: string) => void;
-    amountRange: { min: string; max: string };
-    setAmountRange: (range: { min: string; max: string }) => void;
 }
 
 const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
-    transactions,
-    searchQuery,
-    setSearchQuery,
-    filterType,
-    setFilterType,
-    onEdit,
-    onDelete,
-    selectedAccount,
-    onClearAccountFilter,
-
-    categories,
-    dateRange,
-    setDateRange,
-    filterCategory,
-    setFilterCategory,
-    amountRange,
-    setAmountRange
+    onEdit
 }) => {
+    const {
+        searchQuery,
+        setSearchQuery,
+        filterType,
+        setFilterType,
+        selectedAccount,
+        setSelectedAccount,
+        dateRange,
+        setDateRange,
+        filterCategory,
+        setFilterCategory,
+        amountRange,
+        setAmountRange
+    } = useDashboardUI();
+
+    const {
+        filteredTransactions: transactions,
+        deleteTransaction: onDelete,
+        categories
+    } = useDashboard();
+
+    const onClearAccountFilter = () => setSelectedAccount(null);
     const [showFilters, setShowFilters] = useState(false);
 
     const activeFiltersCount = [

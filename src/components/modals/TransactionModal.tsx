@@ -7,22 +7,21 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { useRegion } from '../../contexts/RegionContext';
 import toast from 'react-hot-toast';
 
+import { useDashboard } from '../../contexts/DashboardContext';
+
 interface TransactionModalProps {
     isOpen: boolean;
     onClose: () => void;
-    accounts: Account[];
-    categories: Category[];
     editingTransaction: Transaction | null;
 }
 
 export function TransactionModal({
     isOpen,
     onClose,
-    accounts,
-    categories,
     editingTransaction
 }: TransactionModalProps) {
     const { settings } = useRegion();
+    const { accounts, categories, deleteTransaction } = useDashboard(); // Using existing hook if it has categories
     const { addTransaction, updateTransaction } = useTransactions(100);
 
     const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<TransactionFormData>({

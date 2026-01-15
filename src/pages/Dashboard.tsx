@@ -163,6 +163,11 @@ function DashboardContent() {
         setShowModal(true);
     }, []);
 
+    const handleCloseModal = useCallback(() => setShowModal(false), []);
+    const handleCloseAccountModal = useCallback(() => { setShowAccountModal(false); setEditingAccount(null); }, []);
+    const handleCloseCategoryModal = useCallback(() => { setShowCategoryModal(false); setEditingCategory(null); }, []);
+    const handleCloseReconcileModal = useCallback(() => setShowReconcileModal(false), []);
+
 
     if (loadingAccs && accounts.length === 0) {
         return (
@@ -387,7 +392,7 @@ function DashboardContent() {
                 <Suspense fallback={<LoadingSpinner />}>
                     <TransactionModal
                         isOpen={showModal}
-                        onClose={useCallback(() => setShowModal(false), [])}
+                        onClose={handleCloseModal}
                         editingTransaction={editingTransaction}
                     />
                 </Suspense>
@@ -398,7 +403,7 @@ function DashboardContent() {
                 <Suspense fallback={<LoadingSpinner />}>
                     <AccountModal
                         isOpen={showAccountModal}
-                        onClose={useCallback(() => { setShowAccountModal(false); setEditingAccount(null); }, [])}
+                        onClose={handleCloseAccountModal}
                         editingAccount={editingAccount}
                     />
                 </Suspense>
@@ -409,7 +414,7 @@ function DashboardContent() {
                 <Suspense fallback={<LoadingSpinner />}>
                     <CategoryModal
                         isOpen={showCategoryModal}
-                        onClose={useCallback(() => { setShowCategoryModal(false); setEditingCategory(null); }, [])}
+                        onClose={handleCloseCategoryModal}
                         editingCategory={editingCategory}
                         setEditingCategory={setEditingCategory}
                     />
@@ -421,11 +426,11 @@ function DashboardContent() {
                 <Suspense fallback={<LoadingSpinner />}>
                     <ReconcileModal
                         isOpen={showReconcileModal}
-                        onClose={useCallback(() => setShowReconcileModal(false), [])}
+                        onClose={handleCloseReconcileModal}
                         account={reconcilingAccount}
                     />
                 </Suspense>
             </ErrorBoundary>
-        </div >
+        </div>
     );
 }

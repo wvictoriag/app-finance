@@ -42,9 +42,9 @@ export const DashboardUIProvider = ({ children, initialView = 'dashboard' }: { c
 
     // Date State
     const [selectedDate, setSelectedDate] = useState(() => {
-        const m = parseInt(searchParams.get('month') || '0');
-        const y = parseInt(searchParams.get('year') || '0');
-        if (m > 0 && m <= 12 && y > 1900) return new Date(y, m - 1, 1);
+        const m = parseInt(searchParams.get('month') || '0', 10);
+        const y = parseInt(searchParams.get('year') || '0', 10);
+        if (m >= 1 && m <= 12 && y > 1900) return new Date(y, m - 1, 1);
         return new Date();
     });
 

@@ -91,10 +91,10 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     }, [categories, monthTx]);
 
     const { monthIncome, monthExpenses } = useMemo(() => {
-        if (!monthTx) return { monthIncome: 0, monthExpenses: 0 };
+        if (!monthTx || !Array.isArray(monthTx)) return { monthIncome: 0, monthExpenses: 0 };
         return monthTx.reduce((acc, tx) => {
-            const amt = Number(tx.amount);
-            if (!tx.destination_account_id) {
+            const amt = Number(tx?.amount || 0);
+            if (!tx?.destination_account_id) {
                 if (amt > 0) acc.monthIncome += amt;
                 else acc.monthExpenses += Math.abs(amt);
             }

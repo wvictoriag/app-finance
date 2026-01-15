@@ -1,31 +1,115 @@
-import React from 'react';
-import { UseFormRegister, FieldErrors } from 'react-hook-form';
-import { TransactionFormData } from '../../lib/schemas';
-import type { Account, Category } from '../../types';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { transactionSchema, type TransactionFormData } from '../../lib/schemas';
+import type { Account, Category, Transaction } from '../../types';
+import { useTransactions } from '../../hooks/useTransactions';
+import { useRegion } from '../../contexts/RegionContext';
+import toast from 'react-hot-toast';
 
 interface TransactionModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (e: React.FormEvent) => void;
-    register: UseFormRegister<TransactionFormData>;
-    errors: FieldErrors<TransactionFormData>;
     accounts: Account[];
     categories: Category[];
-    txType: 'income' | 'expense' | 'transfer';
-    isEditing: boolean;
+    editingTransaction: Transaction | null;
 }
 
 export function TransactionModal({
     isOpen,
     onClose,
-    onSubmit,
-    register,
-    errors,
     accounts,
     categories,
-    txType,
-    isEditing
+    editingTransaction
 }: TransactionModalProps) {
+    const { settings } = useRegion();
+    const { addTransaction, updateTransaction } = useTransactions(100);
+
+    const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<TransactionFormData>({
+        resolver: zodResolver(transactionSchema) as any,
+        defaultValues: {
+            date: new Date().toISOString().split('T')[0],
+            type: 'expense',
+            amount: 0
+        }
+    });
+
+    const txType = watch('type');
+
+    useEffect(() => {
+        if (editingTransaction) {
+            let type: 'income' | 'expense' | 'transfer' = 'expense';
+            if (editingTransaction.destination_account_id) type = 'transfer';
+            else if (Number(editingTransaction.amount) > 0) type = 'income';
+
+            reset({
+                account_id: editingTransaction.account_id,
+                destination_account_id: editingTransaction.destination_account_id || '',
+                date: editingTransaction.date,
+                category_id: editingTransaction.category_id || '',
+                amount: Math.abs(editingTransaction.amount),
+                description: editingTransaction.description || '',
+                type: type
+            });
+        } else {
+            reset({
+                date: new Date().toISOString().split('T')[0],
+                type: 'expense',
+                amount: 0,
+                account_id: '',
+                category_id: '',
+                description: ''
+            });
+        }
+    }, [editingTransaction, reset, isOpen]);
+
+    const onSubmit = async (data: TransactionFormData) => {
+        try {
+            let finalAmount = Math.abs(data.amount);
+            if (data.type === 'expense' || data.type === 'transfer') {
+                finalAmount = -finalAmount;
+            }
+
+            const payload = {
+                account_id: data.account_id,
+                date: data.date,
+                amount: finalAmount,
+                description: data.description,
+                category_id: data.type === 'transfer' ? null : data.category_id,
+                destination_account_id: data.type === 'transfer' ? data.destination_account_id : null
+            };
+
+            if (editingTransaction) {
+                await updateTransaction({ id: editingTransaction.id, updates: payload });
+                toast.success('Transacción actualizada');
+            } else {
+                await addTransaction(payload);
+
+                // 4x1000 Tax Logic (Colombia Only)
+                if (settings.countryCode === 'CO' && (data.type === 'expense' || data.type === 'transfer')) {
+                    const sourceAccount = accounts.find(a => a.id === data.account_id);
+                    if (sourceAccount && !sourceAccount.is_tax_exempt) {
+                        const taxAmount = Math.round(Number(Math.abs(data.amount)) * 0.004);
+                        if (taxAmount > 0) {
+                            await addTransaction({
+                                account_id: data.account_id,
+                                date: data.date,
+                                amount: -taxAmount,
+                                description: 'Impuesto GMF (4x1000)',
+                                category_id: categories.find(c => c.name.includes('Gastos Fijos') || c.type === 'Gastos Fijos')?.id,
+                                destination_account_id: null
+                            });
+                            toast('Impuesto 4x1000 aplicado', { icon: '💸' });
+                        }
+                    }
+                }
+                toast.success('Transacción creada');
+            }
+            onClose();
+        } catch (error: any) {
+            toast.error('Error al guardar: ' + error.message);
+        }
+    };
     if (!isOpen) return null;
 
     return (
@@ -41,7 +125,7 @@ export function TransactionModal({
                         id="transaction-modal-title"
                         className="text-xl font-bold text-slate-800 dark:text-white"
                     >
-                        {isEditing ? 'Editar' : 'Nueva'} Transacción
+                        {editingTransaction ? 'Editar' : 'Nueva'} Transacción
                     </h3>
                     <button
                         onClick={onClose}
@@ -52,7 +136,7 @@ export function TransactionModal({
                     </button>
                 </div>
 
-                <form onSubmit={onSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit) as any} className="space-y-4">
                     <div>
                         <label htmlFor="account_id" className="sr-only">Cuenta</label>
                         <select

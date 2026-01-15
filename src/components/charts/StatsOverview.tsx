@@ -89,7 +89,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ transactions, cate
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value: number) => formatCurrency(value)}
+                                    formatter={(value: any) => formatCurrency(value)}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />
                                 <Legend />
@@ -108,7 +108,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ transactions, cate
                                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                                 <YAxis tick={{ fontSize: 10 }} tickFormatter={(val) => `$${val / 1000}k`} />
                                 <Tooltip
-                                    formatter={(value: number) => formatCurrency(value)}
+                                    formatter={(value: any) => formatCurrency(value)}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />
                                 <Legend />

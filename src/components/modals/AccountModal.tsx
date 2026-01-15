@@ -1,37 +1,61 @@
-import React from 'react';
-import { UseFormRegister, UseFormHandleSubmit, FieldErrors, UseFormReset } from 'react-hook-form';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRegion } from '../../contexts/RegionContext';
-
-interface AccountFormData {
-    name: string;
-    bank?: string;
-    account_number?: string;
-    type: string;
-    initial_balance: number;
-    balance: number;
-    is_tax_exempt?: boolean;
-}
+import { accountSchema, type AccountFormData } from '../../lib/schemas';
+import { useAccounts } from '../../hooks/useAccounts';
+import type { Account } from '../../types';
+import toast from 'react-hot-toast';
 
 interface AccountModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: AccountFormData) => Promise<void>;
-    register: UseFormRegister<AccountFormData>;
-    handleSubmit: UseFormHandleSubmit<AccountFormData>;
-    errors: FieldErrors<AccountFormData>;
-    isEditing: boolean;
+    editingAccount: Account | null;
 }
 
 export function AccountModal({
     isOpen,
     onClose,
-    onSubmit,
-    register,
-    handleSubmit,
-    errors,
-    isEditing
+    editingAccount
 }: AccountModalProps) {
     const { settings } = useRegion();
+    const { createAccount, updateAccount } = useAccounts();
+
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<AccountFormData>({
+        resolver: zodResolver(accountSchema) as any
+    });
+
+    useEffect(() => {
+        if (editingAccount) {
+            reset(editingAccount as any);
+        } else {
+            reset({
+                name: '',
+                bank: '',
+                account_number: '',
+                type: 'Checking',
+                initial_balance: 0,
+                balance: 0,
+                is_tax_exempt: false,
+                credit_limit: 0
+            });
+        }
+    }, [editingAccount, reset, isOpen]);
+
+    const onSubmit = async (data: AccountFormData) => {
+        try {
+            if (editingAccount) {
+                await updateAccount({ id: editingAccount.id, updates: data });
+                toast.success('Cuenta actualizada');
+            } else {
+                await createAccount(data);
+                toast.success('Cuenta creada');
+            }
+            onClose();
+        } catch (err: any) {
+            toast.error(err.message || 'Error al guardar la cuenta');
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -48,7 +72,7 @@ export function AccountModal({
                         id="account-modal-title"
                         className="text-xl font-bold text-slate-800 dark:text-white"
                     >
-                        {isEditing ? 'Editar' : 'Nueva'} Cuenta
+                        {editingAccount ? 'Editar' : 'Nueva'} Cuenta
                     </h3>
                     <button
                         onClick={onClose}
@@ -59,7 +83,7 @@ export function AccountModal({
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit) as any} className="space-y-4">
                     <div>
                         <label htmlFor="account-name" className="sr-only">Nombre de la cuenta</label>
                         <input
@@ -149,6 +173,18 @@ export function AccountModal({
                                 {errors.type.message}
                             </p>
                         )}
+                    </div>
+
+                    <div className="space-y-1">
+                        <label htmlFor="credit-limit" className="text-[9px] font-black text-slate-400 uppercase ml-2">Cupo / Límite Crédito</label>
+                        <input
+                            id="credit-limit"
+                            {...register('credit_limit')}
+                            type="number"
+                            step="any"
+                            placeholder="Ej: 1000000"
+                            className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold"
+                        />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

@@ -1,22 +1,15 @@
-import React from 'react';
-import { UseFormRegister, UseFormHandleSubmit, FieldErrors, UseFormReset } from 'react-hook-form';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { formatCurrency } from '../../utils/formatters';
 import type { Category } from '../../types';
-
-interface CategoryFormData {
-    name: string;
-    type: 'Ingresos' | 'Gastos Fijos' | 'Gastos Variables' | 'Ahorro';
-    monthly_budget: number;
-}
+import { categorySchema, type CategoryFormData } from '../../lib/schemas';
+import { useCategories } from '../../hooks/useCategories';
+import toast from 'react-hot-toast';
 
 interface CategoryModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: CategoryFormData) => Promise<void>;
-    onDelete: (id: string) => Promise<void>;
-    register: UseFormRegister<CategoryFormData>;
-    handleSubmit: UseFormHandleSubmit<CategoryFormData>;
-    errors: FieldErrors<CategoryFormData>;
     categories: Category[];
     editingCategory: Category | null;
     setEditingCategory: (cat: Category | null) => void;
@@ -25,15 +18,63 @@ interface CategoryModalProps {
 export function CategoryModal({
     isOpen,
     onClose,
-    onSubmit,
-    onDelete,
-    register,
-    handleSubmit,
-    errors,
     categories,
     editingCategory,
     setEditingCategory
 }: CategoryModalProps) {
+    const { createCategory, updateCategory, deleteCategory } = useCategories();
+
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<CategoryFormData>({
+        resolver: zodResolver(categorySchema) as any
+    });
+
+    useEffect(() => {
+        if (editingCategory) {
+            reset({
+                name: editingCategory.name,
+                type: editingCategory.type as any,
+                monthly_budget: Math.abs(editingCategory.monthly_budget)
+            });
+        } else {
+            reset({
+                name: '',
+                type: 'Gastos Variables',
+                monthly_budget: 0
+            });
+        }
+    }, [editingCategory, reset, isOpen]);
+
+    const onSubmit = async (data: CategoryFormData) => {
+        try {
+            let b = data.monthly_budget;
+            if (['Gastos Fijos', 'Gastos Variables', 'Ahorro'].includes(data.type)) {
+                b = -Math.abs(b);
+            }
+            const payload = { ...data, monthly_budget: b };
+
+            if (editingCategory) {
+                await updateCategory({ id: editingCategory.id, updates: payload });
+                toast.success('Categoría actualizada');
+            } else {
+                await createCategory(payload);
+                toast.success('Categoría creada');
+            }
+            setEditingCategory(null);
+            reset();
+        } catch (err: any) {
+            toast.error(err.message || 'Error al guardar la categoría');
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteCategory(id);
+            toast.success('Categoría eliminada');
+            setEditingCategory(null);
+        } catch (err: any) {
+            toast.error(err.message || 'Error al eliminar la categoría');
+        }
+    };
     if (!isOpen) return null;
 
     return (
@@ -78,8 +119,8 @@ export function CategoryModal({
                                             key={cat.id}
                                             onClick={() => setEditingCategory(cat)}
                                             className={`w-full text-left px-4 py-2 rounded-xl text-sm transition-all flex justify-between items-center ${editingCategory?.id === cat.id
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
                                                 }`}
                                             aria-label={`Editar categoría ${cat.name}`}
                                             aria-pressed={editingCategory?.id === cat.id}
@@ -101,7 +142,7 @@ export function CategoryModal({
                             {editingCategory ? 'Editar' : 'Nueva'} Categoría
                         </h4>
 
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        <form onSubmit={handleSubmit(onSubmit) as any} className="space-y-4">
                             <div>
                                 <label htmlFor="category-name" className="sr-only">Nombre de la categoría</label>
                                 <input
@@ -172,7 +213,7 @@ export function CategoryModal({
                                     type="button"
                                     onClick={() => {
                                         if (confirm('¿Eliminar esta categoría?')) {
-                                            onDelete(editingCategory.id);
+                                            handleDelete(editingCategory.id);
                                             setEditingCategory(null);
                                         }
                                     }}

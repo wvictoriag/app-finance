@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import { LoadingSpinner } from './components/LoadingSpinner';
+
+// Lazy-loaded Pages
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -33,34 +36,36 @@ function App() {
         <AuthProvider>
             <Toaster position="top-right" />
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                        path="/"
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/proyeccion-5y"
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard view="projection5y" />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/proyeccion-30y"
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard view="projection30y" />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+                <Suspense fallback={<LoadingSpinner />}>
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route
+                            path="/"
+                            element={
+                                <ProtectedRoute>
+                                    <Dashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/proyeccion-5y"
+                            element={
+                                <ProtectedRoute>
+                                    <Dashboard view="projection5y" />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/proyeccion-30y"
+                            element={
+                                <ProtectedRoute>
+                                    <Dashboard view="projection30y" />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </Suspense>
             </Router>
         </AuthProvider>
     );

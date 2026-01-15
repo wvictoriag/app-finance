@@ -1,25 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatCurrency } from '../../utils/formatters';
 import type { Account } from '../../types';
+import { useAccounts } from '../../hooks/useAccounts';
+import toast from 'react-hot-toast';
 
 interface ReconcileModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onReconcile: () => void;
     account: Account | null;
-    reconcileValue: string;
-    setReconcileValue: (value: string) => void;
 }
 
 export function ReconcileModal({
     isOpen,
     onClose,
-    onReconcile,
-    account,
-    reconcileValue,
-    setReconcileValue
+    account
 }: ReconcileModalProps) {
+    const { updateAccount } = useAccounts();
+    const [reconcileValue, setReconcileValue] = useState<string>('');
+
+    useEffect(() => {
+        if (account && isOpen) {
+            setReconcileValue(account.balance.toString());
+        }
+    }, [account, isOpen]);
+
     if (!isOpen || !account) return null;
+
+    const handleReconcile = async () => {
+        if (reconcileValue === '') return;
+        try {
+            await updateAccount({
+                id: account.id,
+                updates: { balance: Number(reconcileValue) } as any
+            });
+            toast.success('Saldo reconciliado');
+            onClose();
+        } catch (err: any) {
+            toast.error(err.message || 'Error al reconciliar');
+        }
+    };
 
     const difference = Number(reconcileValue) - account.balance;
 
@@ -77,8 +96,8 @@ export function ReconcileModal({
                         <div
                             id="reconcile-difference"
                             className={`p-3 rounded-xl text-sm font-bold ${difference > 0
-                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-                                    : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400'
+                                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                                : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400'
                                 }`}
                             role="status"
                             aria-live="polite"
@@ -96,7 +115,7 @@ export function ReconcileModal({
                             Cancelar
                         </button>
                         <button
-                            onClick={onReconcile}
+                            onClick={handleReconcile}
                             className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-colors"
                         >
                             Actualizar

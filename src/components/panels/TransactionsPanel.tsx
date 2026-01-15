@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Pencil, Trash2, ArrowRightLeft, Filter, X, Download } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import type { Transaction, Category } from '../../types';
+import type { Transaction, Category, Account } from '../../types';
 import { exportTransactionsToCSV } from '../../utils/exportUtils';
 
 interface TransactionsPanelProps {
@@ -12,7 +12,7 @@ interface TransactionsPanelProps {
     setFilterType: (type: string) => void;
     onEdit: (transaction: Transaction) => void;
     onDelete: (id: string) => void;
-    selectedAccount?: any;
+    selectedAccount?: Account | null;
     onClearAccountFilter?: () => void;
 
     // Advanced Filters
@@ -25,7 +25,7 @@ interface TransactionsPanelProps {
     setAmountRange: (range: { min: string; max: string }) => void;
 }
 
-export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
+const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
     transactions,
     searchQuery,
     setSearchQuery,
@@ -250,3 +250,5 @@ export const TransactionsPanel: React.FC<TransactionsPanelProps> = ({
         </div>
     );
 };
+
+export const TransactionsPanel = memo(TransactionsPanelComponent);

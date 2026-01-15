@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
@@ -8,9 +8,6 @@ import {
     RefreshCw, Wifi, WifiOff, CheckCircle2, AlertCircle, X, ExternalLink
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatters';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { transactionSchema, accountSchema, categorySchema, type TransactionFormData, type AccountFormData, type CategoryFormData } from '../lib/schemas';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions, useMonthlyTransactions } from '../hooks/useTransactions';
 import { useTransactionSums } from '../hooks/useTransactionSums';
@@ -23,18 +20,24 @@ import { useRegion } from '../contexts/RegionContext';
 import { AccountsPanel } from '../components/panels/AccountsPanel';
 import { TransactionsPanel } from '../components/panels/TransactionsPanel';
 import { MonthlyControl } from '../components/panels/MonthlyControl';
-import ProjectionsView from './ProjectionsView';
-import { StatsOverview } from '../components/charts/StatsOverview';
-import { CalendarView } from '../components/views/CalendarView';
-import { SavingsGoals } from '../components/views/SavingsGoals';
 import type { Account, Category, Transaction, MonthlyControlItem } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Modals
-import { TransactionModal } from '../components/modals/TransactionModal';
-import { AccountModal } from '../components/modals/AccountModal';
-import { CategoryModal } from '../components/modals/CategoryModal';
-import { ReconcileModal } from '../components/modals/ReconcileModal';
+// Lazy-loaded Views (Code Splitting)
+const ProjectionsView = lazy(() => import('./ProjectionsView'));
+const CalendarView = lazy(() => import('../components/views/CalendarView').then(m => ({ default: m.CalendarView })));
+const SavingsGoals = lazy(() => import('../components/views/SavingsGoals').then(m => ({ default: m.SavingsGoals })));
+const StatsOverview = lazy(() => import('../components/charts/StatsOverview').then(m => ({ default: m.StatsOverview })));
+
+// Loading Component
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+
+// Lazy-loaded Modals
+const TransactionModal = lazy(() => import('../components/modals/TransactionModal').then(m => ({ default: m.TransactionModal })));
+const AccountModal = lazy(() => import('../components/modals/AccountModal').then(m => ({ default: m.AccountModal })));
+const CategoryModal = lazy(() => import('../components/modals/CategoryModal').then(m => ({ default: m.CategoryModal })));
+const ReconcileModal = lazy(() => import('../components/modals/ReconcileModal').then(m => ({ default: m.ReconcileModal })));
 
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const { user } = useAuth();
@@ -48,10 +51,10 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const selectedYear = selectedDate.getFullYear();
 
     // TanStack Query Hooks
-    const { accounts, isLoading: loadingAccs, createAccount, updateAccount, deleteAccount } = useAccounts();
-    const { transactions, isLoading: loadingRecent, addTransaction, updateTransaction, deleteTransaction } = useTransactions(100);
+    const { accounts, isLoading: loadingAccs, deleteAccount } = useAccounts();
+    const { transactions, isLoading: loadingRecent, deleteTransaction } = useTransactions(100);
     const { data: transactionSumsData, isLoading: loadingSums } = useTransactionSums();
-    const { categories, isLoading: loadingCats, createCategory, updateCategory, deleteCategory } = useCategories();
+    const { categories, isLoading: loadingCats } = useCategories();
     const { data: monthTx, isLoading: loadingMonth } = useMonthlyTransactions(selectedMonth, selectedYear);
 
     // Local UI State
@@ -63,30 +66,12 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     const [showReconcileModal, setShowReconcileModal] = useState(false);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [reconcilingAccount, setReconcilingAccount] = useState<Account | null>(null);
-    const [reconcileValue, setReconcileValue] = useState<string>('');
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState('all');
 
-    // Forms
-    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<TransactionFormData>({
-        resolver: zodResolver(transactionSchema) as any,
-        defaultValues: {
-            date: new Date().toISOString().split('T')[0],
-            type: 'expense',
-            amount: 0
-        }
-    });
 
-    const { register: regAcc, handleSubmit: handleAccSubmit, reset: resetAcc, formState: { errors: errorsAcc } } = useForm<AccountFormData>({
-        resolver: zodResolver(accountSchema) as any
-    });
 
-    const { register: regCat, handleSubmit: handleCatSubmit, reset: resetCat, formState: { errors: errorsCat } } = useForm<CategoryFormData>({
-        resolver: zodResolver(categorySchema) as any
-    });
-
-    const txType = watch('type');
 
     const transactionSums = transactionSumsData || {};
 
@@ -173,104 +158,28 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     // Selection handlers
     useEffect(() => { setCurrentView(view); }, [view]);
 
-    const handleReconcile = async () => {
-        if (!reconcilingAccount || reconcileValue === '') return;
-        try {
-            await updateAccount({
-                id: reconcilingAccount.id,
-                updates: { balance: Number(reconcileValue) } as any
-            });
-            setShowReconcileModal(false);
-            setReconcilingAccount(null);
-            setReconcileValue('');
-            toast.success('Saldo reconciliado');
-        } catch (err: any) {
-            toast.error(err.message);
-        }
-    };
+    const handleAddAccount = useCallback(() => setShowAccountModal(true), []);
+    const handleSelectAccount = useCallback((acc: Account) => setSelectedAccount(prev => prev?.id === acc.id ? null : acc), []);
+    const handleEditAccount = useCallback((acc: Account) => {
+        setEditingAccount(acc);
+        setShowAccountModal(true);
+    }, []);
+    const handleOpenReconcile = useCallback((acc: Account) => {
+        setReconcilingAccount(acc);
+        setShowReconcileModal(true);
+    }, []);
 
-    const handleLogout = async () => { await supabase.auth.signOut(); };
+    const handleLogout = useCallback(async () => { await supabase.auth.signOut(); }, []);
 
-    const handleOpenAddModal = () => {
+    const handleOpenAddModal = useCallback(() => {
         setEditingTransaction(null);
-        reset({
-            date: new Date().toISOString().split('T')[0],
-            type: 'expense',
-            amount: 0,
-            account_id: '',
-            category_id: '',
-            description: ''
-        });
         setShowModal(true);
-    };
+    }, []);
 
-    const handleOpenEditModal = (tx: Transaction) => {
+    const handleOpenEditModal = useCallback((tx: Transaction) => {
         setEditingTransaction(tx);
-        let type: 'income' | 'expense' | 'transfer' = 'expense';
-        if (tx.destination_account_id) type = 'transfer';
-        else if (Number(tx.amount) > 0) type = 'income';
-
-        reset({
-            account_id: tx.account_id,
-            destination_account_id: tx.destination_account_id || '',
-            date: tx.date,
-            category_id: tx.category_id || '',
-            amount: Math.abs(tx.amount),
-            description: tx.description || '',
-            type: type
-        });
         setShowModal(true);
-    };
-
-    const onSubmitTransaction = handleSubmit(async (data: TransactionFormData) => {
-        try {
-            let finalAmount = Math.abs(data.amount);
-            if (data.type === 'expense' || data.type === 'transfer') {
-                finalAmount = -finalAmount;
-            }
-
-            const payload = {
-                account_id: data.account_id,
-                date: data.date,
-                amount: finalAmount,
-                description: data.description,
-                category_id: data.type === 'transfer' ? null : data.category_id,
-                destination_account_id: data.type === 'transfer' ? data.destination_account_id : null
-            };
-
-            if (editingTransaction) {
-                await updateTransaction({ id: editingTransaction.id, updates: payload });
-                toast.success('Transacción actualizada');
-            } else {
-                await addTransaction(payload);
-
-                // 4x1000 Tax Logic (Colombia Only)
-                if (settings.countryCode === 'CO' && (data.type === 'expense' || data.type === 'transfer')) {
-                    const sourceAccount = accounts.find(a => a.id === data.account_id);
-                    if (sourceAccount && !sourceAccount.is_tax_exempt) {
-                        const taxAmount = Math.round(Number(Math.abs(data.amount)) * 0.004);
-                        if (taxAmount > 0) {
-                            await addTransaction({
-                                account_id: data.account_id,
-                                date: data.date,
-                                amount: -taxAmount,
-                                description: 'Impuesto GMF (4x1000)',
-                                category_id: categories.find(c => c.name.includes('Gastos Fijos') || c.type === 'Gastos Fijos')?.id,
-                                destination_account_id: null
-                            });
-                            toast('Impuesto 4x1000 aplicado', { icon: '💸' });
-                        }
-                    }
-                }
-
-                toast.success('Transacción creada');
-            }
-
-            setShowModal(false);
-        } catch (error: any) {
-            toast.error('Error al guardar: ' + error.message);
-        }
-    });
+    }, []);
 
 
     if (loadingAccs && accounts.length === 0) {
@@ -397,11 +306,11 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                         accounts={accounts}
                                         transactionSums={transactionSums}
                                         selectedAccountId={selectedAccount?.id}
-                                        onAddAccount={() => setShowAccountModal(true)}
-                                        onSelectAccount={(acc) => setSelectedAccount(selectedAccount?.id === acc.id ? null : acc)}
-                                        onEditAccount={(acc: Account) => { setEditingAccount(acc); resetAcc(acc as any); setShowAccountModal(true); }}
+                                        onAddAccount={handleAddAccount}
+                                        onSelectAccount={handleSelectAccount}
+                                        onEditAccount={handleEditAccount}
                                         onDeleteAccount={deleteAccount}
-                                        onReconcile={(acc) => { setReconcilingAccount(acc); setReconcileValue(acc.balance.toString()); setShowReconcileModal(true); }}
+                                        onReconcile={handleOpenReconcile}
                                     />
                                 </div>
 
@@ -423,11 +332,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                         onClearAccountFilter={() => setSelectedAccount(null)}
                                         onEdit={(tx: Transaction) => {
                                             setEditingTransaction(tx);
-                                            reset({
-                                                ...tx,
-                                                category_id: tx.category_id || undefined,
-                                                destination_account_id: tx.destination_account_id || undefined
-                                            });
                                             setShowModal(true);
                                         }}
                                         onDelete={deleteTransaction}
@@ -444,7 +348,7 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                         amountRange={amountRange}
                                         setAmountRange={setAmountRange}
                                     />
-                                    <button onClick={() => { setEditingTransaction(null); reset({ date: new Date().toISOString().split('T')[0], type: 'expense', amount: 0 }); setShowModal(true); }} className="absolute bottom-10 right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
+                                    <button onClick={() => { setEditingTransaction(null); setShowModal(true); }} className="absolute bottom-10 right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
                                         <Plus size={32} strokeWidth={3} />
                                     </button>
                                 </div>
@@ -452,17 +356,20 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                         ) : currentView === 'projections' ? (
                             <motion.div
                                 key="projections"
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.98 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex-1 overflow-hidden"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900/50"
                             >
-                                <ProjectionsView
-                                    transactions={transactions}
-                                    accounts={accounts}
-                                    categories={categories}
-                                />
+                                <ErrorBoundary>
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <ProjectionsView
+                                            transactions={transactions}
+                                            accounts={accounts}
+                                            categories={categories}
+                                        />
+                                    </Suspense>
+                                </ErrorBoundary>
                             </motion.div>
                         ) : currentView === 'calendar' ? (
                             <motion.div
@@ -473,9 +380,13 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 transition={{ duration: 0.3 }}
                                 className="flex-1 overflow-hidden"
                             >
-                                <CalendarView
-                                    transactions={filteredTransactions}
-                                />
+                                <ErrorBoundary>
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <CalendarView
+                                            transactions={filteredTransactions}
+                                        />
+                                    </Suspense>
+                                </ErrorBoundary>
                             </motion.div>
                         ) : currentView === 'goals' ? (
                             <motion.div
@@ -486,7 +397,11 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 transition={{ duration: 0.3 }}
                                 className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-900/50"
                             >
-                                <SavingsGoals />
+                                <ErrorBoundary>
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <SavingsGoals />
+                                    </Suspense>
+                                </ErrorBoundary>
                             </motion.div>
                         ) : currentView === 'stats' ? (
                             <motion.div
@@ -497,10 +412,14 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
                                 transition={{ duration: 0.3 }}
                                 className="flex-1 overflow-hidden"
                             >
-                                <StatsOverview
-                                    transactions={transactions}
-                                    categories={categories}
-                                />
+                                <ErrorBoundary>
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <StatsOverview
+                                            transactions={transactions}
+                                            categories={categories}
+                                        />
+                                    </Suspense>
+                                </ErrorBoundary>
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
@@ -508,74 +427,52 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
             </div>
 
             {/* Transaction Modal */}
-            <TransactionModal
-                isOpen={showModal}
-                onClose={() => setShowModal(false)}
-                onSubmit={onSubmitTransaction}
-                register={register}
-                errors={errors}
-                accounts={accounts}
-                categories={categories}
-                txType={txType}
-                isEditing={!!editingTransaction}
-            />
+            <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner />}>
+                    <TransactionModal
+                        isOpen={showModal}
+                        onClose={useCallback(() => setShowModal(false), [])}
+                        accounts={accounts}
+                        categories={categories}
+                        editingTransaction={editingTransaction}
+                    />
+                </Suspense>
+            </ErrorBoundary>
 
             {/* Account Modal */}
-            <AccountModal
-                isOpen={showAccountModal}
-                onClose={() => { setShowAccountModal(false); setEditingAccount(null); }}
-                onSubmit={async (data: AccountFormData) => {
-                    try {
-                        if (editingAccount) await updateAccount({ id: editingAccount.id, updates: data });
-                        else await createAccount(data);
-                        setShowAccountModal(false);
-                        setEditingAccount(null);
-                        toast.success('Cuenta guardada');
-                    } catch (err: any) { toast.error(err.message); }
-                }}
-                register={regAcc}
-                handleSubmit={handleAccSubmit}
-                errors={errorsAcc}
-                isEditing={!!editingAccount}
-            />
+            <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner />}>
+                    <AccountModal
+                        isOpen={showAccountModal}
+                        onClose={useCallback(() => { setShowAccountModal(false); setEditingAccount(null); }, [])}
+                        editingAccount={editingAccount}
+                    />
+                </Suspense>
+            </ErrorBoundary>
 
             {/* Category Modal */}
-            <CategoryModal
-                isOpen={showCategoryModal}
-                onClose={() => { setShowCategoryModal(false); setEditingCategory(null); }}
-                onSubmit={async (data: CategoryFormData) => {
-                    try {
-                        let b = data.monthly_budget;
-                        if (['Gastos Fijos', 'Gastos Variables', 'Ahorro'].includes(data.type)) b = -Math.abs(b);
-                        const payload = { ...data, monthly_budget: b };
-
-                        if (editingCategory) await updateCategory({ id: editingCategory.id, updates: payload });
-                        else await createCategory(payload);
-                        setEditingCategory(null);
-                        resetCat();
-                        toast.success('Categoría guardada');
-                    } catch (err: any) { toast.error(err.message); }
-                }}
-                onDelete={async (id: string) => {
-                    await deleteCategory(id);
-                }}
-                register={regCat}
-                handleSubmit={handleCatSubmit}
-                errors={errorsCat}
-                categories={categories}
-                editingCategory={editingCategory}
-                setEditingCategory={setEditingCategory}
-            />
+            <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner />}>
+                    <CategoryModal
+                        isOpen={showCategoryModal}
+                        onClose={useCallback(() => { setShowCategoryModal(false); setEditingCategory(null); }, [])}
+                        categories={categories}
+                        editingCategory={editingCategory}
+                        setEditingCategory={setEditingCategory}
+                    />
+                </Suspense>
+            </ErrorBoundary>
 
             {/* Quick Reconcile Modal */}
-            <ReconcileModal
-                isOpen={showReconcileModal}
-                onClose={() => setShowReconcileModal(false)}
-                onReconcile={handleReconcile}
-                account={reconcilingAccount}
-                reconcileValue={reconcileValue}
-                setReconcileValue={setReconcileValue}
-            />
-        </div>
+            <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner />}>
+                    <ReconcileModal
+                        isOpen={showReconcileModal}
+                        onClose={useCallback(() => setShowReconcileModal(false), [])}
+                        account={reconcilingAccount}
+                    />
+                </Suspense>
+            </ErrorBoundary>
+        </div >
     );
 }

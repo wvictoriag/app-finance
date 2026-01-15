@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -14,7 +14,7 @@ interface MonthlyControlProps {
     setSelectedDate: (date: Date) => void;
 }
 
-export const MonthlyControl: React.FC<MonthlyControlProps> = ({
+const MonthlyControlComponent: React.FC<MonthlyControlProps> = ({
     monthlyControl,
     selectedDate,
     setSelectedDate
@@ -151,3 +151,5 @@ export const MonthlyControl: React.FC<MonthlyControlProps> = ({
         </div>
     );
 };
+
+export const MonthlyControl = memo(MonthlyControlComponent);

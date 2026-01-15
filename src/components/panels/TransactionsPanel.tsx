@@ -259,7 +259,7 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                     type="checkbox"
                                     checked={selectedIds.includes(tx.id)}
                                     onChange={() => handleToggleSelect(tx.id)}
-                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 checked:opacity-100 transition-opacity"
+                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 opacity-40 group-hover:opacity-100 checked:opacity-100 transition-opacity"
                                 />
                                 <div className={`w-1 h-6 rounded-full shrink-0 ${tx.destination_account_id ? 'bg-blue-400' :
                                     Number(tx.amount) < 0 ? 'bg-rose-500' : 'bg-emerald-500'

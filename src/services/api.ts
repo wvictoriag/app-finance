@@ -33,8 +33,11 @@ export const api = {
 
     deleteAccount: async (id: string): Promise<boolean> => {
         // Manual cascade for transactions if not handled by DB
-        await supabase.from('transactions').delete().eq('account_id', id);
-        await supabase.from('transactions').delete().eq('destination_account_id', id);
+        const { error: txError1 } = await supabase.from('transactions').delete().eq('account_id', id);
+        const { error: txError2 } = await supabase.from('transactions').delete().eq('destination_account_id', id);
+
+        if (txError1) console.error('Error deleting source transactions:', txError1);
+        if (txError2) console.error('Error deleting destination transactions:', txError2);
 
         const { error } = await supabase
             .from('accounts')

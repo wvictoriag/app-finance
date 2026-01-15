@@ -36,7 +36,7 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
     };
 
     const onDeleteAccount = async (id: string) => {
-        if (window.confirm('¿Estás seguro de eliminar esta cuenta?')) {
+        if (window.confirm('¿Estás seguro de eliminar esta cuenta? SE ELIMINARÁN TODAS LAS TRANSACCIONES ASOCIADAS. Esta acción no se puede deshacer.')) {
             await deleteAccount(id);
         }
     };

@@ -33,9 +33,12 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
     const {
         filteredTransactions: transactions,
         deleteTransaction: onDelete,
+        deleteTransactions: onBulkDelete,
         categories,
         loadingRecent
     } = useDashboard();
+
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const onClearAccountFilter = () => setSelectedAccount(null);
     const [showFilters, setShowFilters] = useState(false);
@@ -48,6 +51,32 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
         setDateRange({ from: '', to: '' });
         setFilterCategory('');
         setAmountRange({ min: '', max: '' });
+    };
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedIds(transactions.map(tx => tx.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleToggleSelect = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+        if (window.confirm(`¿Estás seguro de eliminar ${selectedIds.length} transacciones?`)) {
+            try {
+                await onBulkDelete(selectedIds);
+                setSelectedIds([]);
+            } catch (err: any) {
+                console.error(err);
+            }
+        }
     };
 
     return (
@@ -68,13 +97,34 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                         </div>
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{selectedAccount ? 'Mostrando historial de cuenta' : 'Historial Reciente'}</p>
                     </div>
-                    <button
-                        onClick={() => exportTransactionsToCSV(transactions)}
-                        className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
-                        title="Exportar a CSV"
-                    >
-                        <Download size={16} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {selectedIds.length > 0 && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg transition-all text-[10px] font-black uppercase tracking-widest"
+                            >
+                                <Trash2 size={12} />
+                                Borrar ({selectedIds.length})
+                            </button>
+                        )}
+                        <button
+                            onClick={() => exportTransactionsToCSV(transactions)}
+                            className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
+                            title="Exportar a CSV"
+                        >
+                            <Download size={16} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4 mb-4 px-1">
+                    <input
+                        type="checkbox"
+                        checked={transactions.length > 0 && selectedIds.length === transactions.length}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Seleccionar Todo</span>
                 </div>
 
                 <div className="flex gap-2">
@@ -203,8 +253,14 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                     </div>
                 ) : (
                     transactions.map((tx) => (
-                        <div key={tx.id} className="group flex justify-between items-center p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all duration-300 cursor-default">
+                        <div key={tx.id} className={`group flex justify-between items-center p-2.5 rounded-xl transition-all duration-300 cursor-default ${selectedIds.includes(tx.id) ? 'bg-blue-50/50 dark:bg-blue-500/10 shadow-sm border border-blue-500/20' : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}`}>
                             <div className="flex items-center gap-4 min-w-0">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedIds.includes(tx.id)}
+                                    onChange={() => handleToggleSelect(tx.id)}
+                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 checked:opacity-100 transition-opacity"
+                                />
                                 <div className={`w-1 h-6 rounded-full shrink-0 ${tx.destination_account_id ? 'bg-blue-400' :
                                     Number(tx.amount) < 0 ? 'bg-rose-500' : 'bg-emerald-500'
                                     }`}></div>

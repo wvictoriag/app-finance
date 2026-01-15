@@ -53,6 +53,15 @@ export const useTransactions = (limit: number = 50) => {
         },
     });
 
+    const deleteTransactionsMutation = useMutation({
+        mutationFn: (ids: string[]) => api.deleteTransactions(ids),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            queryClient.invalidateQueries({ queryKey: ['transaction-sums'] });
+            queryClient.invalidateQueries({ queryKey: ['accounts'] });
+        },
+    });
+
     return {
         transactions: transactionsQuery.data || [],
         isLoading: transactionsQuery.isLoading,
@@ -60,6 +69,7 @@ export const useTransactions = (limit: number = 50) => {
         addTransaction: addTransactionMutation.mutateAsync,
         updateTransaction: updateTransactionMutation.mutateAsync,
         deleteTransaction: deleteTransactionMutation.mutateAsync,
+        deleteTransactions: deleteTransactionsMutation.mutateAsync,
     };
 };
 

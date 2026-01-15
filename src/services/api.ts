@@ -32,6 +32,10 @@ export const api = {
     },
 
     deleteAccount: async (id: string): Promise<boolean> => {
+        // Manual cascade for transactions if not handled by DB
+        await supabase.from('transactions').delete().eq('account_id', id);
+        await supabase.from('transactions').delete().eq('destination_account_id', id);
+
         const { error } = await supabase
             .from('accounts')
             .delete()
@@ -124,6 +128,16 @@ export const api = {
             .from('transactions')
             .delete()
             .eq('id', id);
+
+        if (error) throw error;
+        return true;
+    },
+
+    deleteTransactions: async (ids: string[]): Promise<boolean> => {
+        const { error } = await supabase
+            .from('transactions')
+            .delete()
+            .in('id', ids);
 
         if (error) throw error;
         return true;

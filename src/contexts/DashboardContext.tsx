@@ -30,6 +30,7 @@ interface DashboardContextType {
     // Mutations
     deleteAccount: (id: string) => Promise<boolean>;
     deleteTransaction: (id: string) => Promise<boolean>;
+    deleteTransactions: (ids: string[]) => Promise<boolean>;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -58,7 +59,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
 
     // TanStack Query Hooks
     const { accounts, isLoading: loadingAccs, deleteAccount } = useAccounts();
-    const { transactions, isLoading: loadingRecent, deleteTransaction } = useTransactions(100);
+    const { transactions, isLoading: loadingRecent, deleteTransaction, deleteTransactions } = useTransactions(100);
     const { data: transactionSumsData, isLoading: loadingSums } = useTransactionSums();
     const { categories, isLoading: loadingCats } = useCategories();
     const { data: monthTx, isLoading: loadingMonth } = useMonthlyTransactions(selectedMonth, selectedYear);
@@ -142,7 +143,8 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
         loadingMonth,
         loadingSums,
         deleteAccount,
-        deleteTransaction
+        deleteTransaction,
+        deleteTransactions
     };
 
     return (

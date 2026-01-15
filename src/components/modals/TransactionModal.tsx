@@ -87,7 +87,7 @@ export function TransactionModal({
                 // 4x1000 Tax Logic (Colombia Only)
                 if (settings.countryCode === 'CO' && (data.type === 'expense' || data.type === 'transfer')) {
                     const sourceAccount = accounts.find(a => a.id === data.account_id);
-                    if (sourceAccount && !sourceAccount.is_tax_exempt) {
+                    if (sourceAccount) {
                         const taxAmount = Math.round(Number(Math.abs(data.amount)) * 0.004);
                         if (taxAmount > 0) {
                             await addTransaction({

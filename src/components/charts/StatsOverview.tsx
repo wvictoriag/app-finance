@@ -19,6 +19,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ transactions, cate
         const catMap = new Map<string, number>();
 
         expenses.forEach(tx => {
+            if (!tx.category_id) return;
             const catName = categories.find(c => c.id === tx.category_id)?.name || 'Sin Categoría';
             const amount = Math.abs(Number(tx.amount));
             catMap.set(catName, (catMap.get(catName) || 0) + amount);
@@ -36,7 +37,10 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ transactions, cate
         const monthMap = new Map<string, { income: number, expense: number }>();
 
         transactions.forEach(tx => {
+            if (!tx.date) return;
             const date = new Date(tx.date);
+            if (isNaN(date.getTime())) return;
+
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
             if (!monthMap.has(key)) monthMap.set(key, { income: 0, expense: 0 });

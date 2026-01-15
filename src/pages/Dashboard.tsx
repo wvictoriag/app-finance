@@ -89,7 +89,7 @@ function DashboardContent() {
     const [reconcilingAccount, setReconcilingAccount] = useState<Account | null>(null);
 
     // Keyboard Shortcuts
-    useKeyboardShortcuts({
+    const shortcuts = useMemo(() => ({
         'n': () => { setEditingTransaction(null); setShowModal(true); },
         'a': () => { setEditingAccount(null); setShowAccountModal(true); },
         'c': () => { setEditingCategory(null); setShowCategoryModal(true); },
@@ -106,7 +106,9 @@ function DashboardContent() {
             setEditingAccount(null);
             setEditingCategory(null);
         }
-    });
+    }), []);
+
+    useKeyboardShortcuts(shortcuts);
 
     // Dark Mode
     const [darkMode, setDarkMode] = useState(() => {

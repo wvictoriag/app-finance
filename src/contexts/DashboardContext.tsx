@@ -108,7 +108,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
 
     const filteredTransactions = useMemo(() => {
         return transactions.filter(tx => {
-            const matchesSearch = tx.description?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = (tx.description || '').toLowerCase().includes(searchQuery.toLowerCase());
             const matchesType = filterType === 'all' ||
                 (filterType === 'income' && Number(tx.amount) > 0) ||
                 (filterType === 'expense' && Number(tx.amount) < 0 && !tx.destination_account_id) ||

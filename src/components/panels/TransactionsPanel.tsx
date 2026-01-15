@@ -10,6 +10,8 @@ interface TransactionsPanelProps {
     onEdit: (transaction: Transaction) => void;
 }
 
+import { ListItemSkeleton } from '../ui/Skeleton';
+
 const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
     onEdit
 }) => {
@@ -31,7 +33,8 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
     const {
         filteredTransactions: transactions,
         deleteTransaction: onDelete,
-        categories
+        categories,
+        loadingRecent
     } = useDashboard();
 
     const onClearAccountFilter = () => setSelectedAccount(null);
@@ -185,7 +188,15 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-0.5 pr-1 scrollbar-hide px-4">
-                {transactions.length === 0 ? (
+                {loadingRecent ? (
+                    <>
+                        <ListItemSkeleton />
+                        <ListItemSkeleton />
+                        <ListItemSkeleton />
+                        <ListItemSkeleton />
+                        <ListItemSkeleton />
+                    </>
+                ) : transactions.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
                         <ArrowRightLeft className="w-8 h-8 text-slate-200 dark:text-slate-800 mb-4" />
                         <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest">Sin movimientos</p>

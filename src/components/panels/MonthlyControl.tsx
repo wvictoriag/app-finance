@@ -1,5 +1,5 @@
 import React, { useState, memo } from 'react';
-import { ChevronLeft, ChevronRight, PieChart as PieIcon, List, AlertTriangle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PieChart as PieIcon, List, AlertTriangle, AlertCircle, FileText } from 'lucide-react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatCurrency } from '../../utils/formatters';
@@ -12,6 +12,8 @@ import { useDashboardUI } from '../../contexts/DashboardUIContext';
 interface MonthlyControlProps {
 }
 
+import { CardSkeleton } from '../ui/Skeleton';
+
 const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
     const {
         selectedDate,
@@ -19,7 +21,8 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
     } = useDashboardUI();
 
     const {
-        monthlyControl
+        monthlyControl,
+        loadingMonth
     } = useDashboard();
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
         'Ingresos': true,
@@ -33,6 +36,10 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
         setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
     };
 
+    const handleExportPDF = () => {
+        window.print();
+    };
+
     return (
         <div className="h-full flex flex-col overflow-hidden">
             <div className="flex justify-between items-center mb-4 px-1 pt-4">
@@ -40,13 +47,22 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
                     <h2 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Ejecución</h2>
                     <div className="flex items-center gap-2">
                         <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Control Mensual</p>
-                        <button
-                            onClick={() => setShowChart(!showChart)}
-                            className="p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-all text-slate-400"
-                            title={showChart ? "Ver Lista" : "Ver Gráfico"}
-                        >
-                            {showChart ? <List size={14} /> : <PieIcon size={14} />}
-                        </button>
+                        <div className="flex items-center gap-1 print:hidden">
+                            <button
+                                onClick={() => setShowChart(!showChart)}
+                                className="p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-all text-slate-400"
+                                title={showChart ? "Ver Lista" : "Ver Gráfico"}
+                            >
+                                {showChart ? <List size={14} /> : <PieIcon size={14} />}
+                            </button>
+                            <button
+                                onClick={handleExportPDF}
+                                className="p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-all text-slate-400"
+                                title="Exportar PDF"
+                            >
+                                <FileText size={14} />
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-4 bg-slate-50/50 dark:bg-white/5 p-1 rounded-2xl mr-6">
@@ -71,7 +87,12 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 space-y-8 scrollbar-hide pb-6">
-                {showChart && (
+                {loadingMonth ? (
+                    <div className="space-y-6">
+                        <CardSkeleton />
+                        <CardSkeleton />
+                    </div>
+                ) : showChart && (
                     <div className="space-y-4">
                         <div className="bg-slate-50/50 dark:bg-white/5 rounded-3xl p-4 border border-slate-100 dark:border-white/5">
                             <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Distribución de Gastos</h4>

@@ -53,6 +53,8 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     );
 }
 
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+
 function DashboardContent() {
     const { user } = useAuth();
     const { settings } = useRegion();
@@ -88,6 +90,26 @@ function DashboardContent() {
     const [showReconcileModal, setShowReconcileModal] = useState(false);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [reconcilingAccount, setReconcilingAccount] = useState<Account | null>(null);
+
+    // Keyboard Shortcuts
+    useKeyboardShortcuts({
+        'n': () => { setEditingTransaction(null); setShowModal(true); },
+        'a': () => { setEditingAccount(null); setShowAccountModal(true); },
+        'c': () => { setEditingCategory(null); setShowCategoryModal(true); },
+        '/': () => {
+            const searchInput = document.querySelector('input[placeholder="Buscar..."]') as HTMLInputElement;
+            searchInput?.focus();
+        },
+        'Escape': () => {
+            setShowModal(false);
+            setShowAccountModal(false);
+            setShowCategoryModal(false);
+            setShowReconcileModal(false);
+            setEditingTransaction(null);
+            setEditingAccount(null);
+            setEditingCategory(null);
+        }
+    });
 
     // Dark Mode
     const [darkMode, setDarkMode] = useState(() => {

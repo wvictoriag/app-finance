@@ -39,7 +39,6 @@ export function AccountModal({
                 type: 'Checking',
                 initial_balance: 0,
                 balance: 0,
-                is_tax_exempt: false,
                 credit_limit: 0
             });
         }
@@ -129,23 +128,6 @@ export function AccountModal({
                         </div>
                     </div>
 
-                    {/* Tax Exemption (CO) */}
-                    {settings.countryCode === 'CO' && (
-                        <div className="flex items-center gap-2 p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100 dark:border-indigo-500/20 mb-4">
-                            <input
-                                type="checkbox"
-                                id="is_tax_exempt"
-                                {...register('is_tax_exempt')}
-                                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                            />
-                            <label
-                                htmlFor="is_tax_exempt"
-                                className="text-xs font-bold text-indigo-700 dark:text-indigo-400 select-none cursor-pointer"
-                            >
-                                Cuenta Exenta 4x1000
-                            </label>
-                        </div>
-                    )}
 
                     <div>
                         <label htmlFor="account-type" className="sr-only">Tipo de cuenta</label>

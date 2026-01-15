@@ -12,7 +12,6 @@ export interface Account {
     initial_balance?: number;
     last_update?: string;
     created_at?: string;
-    is_tax_exempt?: boolean;
 }
 
 export type TransactionType = 'income' | 'expense' | 'transfer';

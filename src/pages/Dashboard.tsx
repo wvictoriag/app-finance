@@ -30,18 +30,17 @@ const CalendarView = lazy(() => import('../components/views/CalendarView').then(
 const SavingsGoals = lazy(() => import('../components/views/SavingsGoals').then(m => ({ default: m.SavingsGoals })));
 const StatsOverview = lazy(() => import('../components/charts/StatsOverview').then(m => ({ default: m.StatsOverview })));
 
-// Loading Component
-import { LoadingSpinner } from '../components/LoadingSpinner';
-import { ErrorBoundary } from '../components/ErrorBoundary';
-
 // Lazy-loaded Modals
 const TransactionModal = lazy(() => import('../components/modals/TransactionModal').then(m => ({ default: m.TransactionModal })));
 const AccountModal = lazy(() => import('../components/modals/AccountModal').then(m => ({ default: m.AccountModal })));
 const CategoryModal = lazy(() => import('../components/modals/CategoryModal').then(m => ({ default: m.CategoryModal })));
 const ReconcileModal = lazy(() => import('../components/modals/ReconcileModal').then(m => ({ default: m.ReconcileModal })));
 
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { DashboardProvider, useDashboard } from '../contexts/DashboardContext';
 import { DashboardUIProvider, useDashboardUI } from '../contexts/DashboardUIContext';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     return (
@@ -52,8 +51,6 @@ export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
         </DashboardUIProvider>
     );
 }
-
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 function DashboardContent() {
     const { user } = useAuth();

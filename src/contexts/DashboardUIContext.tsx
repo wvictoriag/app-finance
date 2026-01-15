@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Account } from '../types';
 
@@ -40,13 +40,23 @@ export const DashboardUIProvider = ({ children, initialView = 'dashboard' }: { c
     const [searchParams, setSearchParams] = useSearchParams();
     const [currentView, setCurrentView] = useState(initialView);
 
-    // Date State
-    const [selectedDate, setSelectedDate] = useState(() => {
-        const m = parseInt(searchParams.get('month') || '0', 10);
-        const y = parseInt(searchParams.get('year') || '0', 10);
-        if (m >= 1 && m <= 12 && y > 1900) return new Date(y, m - 1, 1);
+    // Date State - Derived from URL to prevent sync issues
+    const paramsMonth = parseInt(searchParams.get('month') || '0', 10);
+    const paramsYear = parseInt(searchParams.get('year') || '0', 10);
+
+    const selectedDate = useMemo(() => {
+        if (paramsMonth >= 1 && paramsMonth <= 12 && paramsYear > 1900) {
+            return new Date(paramsYear, paramsMonth - 1, 1);
+        }
         return new Date();
-    });
+    }, [paramsMonth, paramsYear]);
+
+    const setSelectedDate = (date: Date) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('month', (date.getMonth() + 1).toString());
+        nextParams.set('year', date.getFullYear().toString());
+        setSearchParams(nextParams, { replace: true });
+    };
 
     // Filter States
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
@@ -58,7 +68,7 @@ export const DashboardUIProvider = ({ children, initialView = 'dashboard' }: { c
     const [filterCategory, setFilterCategory] = useState('');
     const [amountRange, setAmountRange] = useState({ min: '', max: '' });
 
-    // Sync State TO URL
+    // Sync State TO URL (only for non-essential UI filters)
     useEffect(() => {
         const nextParams = new URLSearchParams(searchParams);
 
@@ -71,13 +81,10 @@ export const DashboardUIProvider = ({ children, initialView = 'dashboard' }: { c
         if (selectedAccount) nextParams.set('account', selectedAccount.id);
         else nextParams.delete('account');
 
-        nextParams.set('month', (selectedDate.getMonth() + 1).toString());
-        nextParams.set('year', selectedDate.getFullYear().toString());
-
         if (nextParams.toString() !== searchParams.toString()) {
             setSearchParams(nextParams, { replace: true });
         }
-    }, [searchQuery, filterType, selectedAccount, selectedDate, setSearchParams, searchParams]);
+    }, [searchQuery, filterType, selectedAccount]);
 
     return (
         <DashboardUIContext.Provider value={{

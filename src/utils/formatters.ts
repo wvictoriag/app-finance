@@ -34,8 +34,6 @@ export const formatDate = (dateString: string): string => {
 
         if (isNaN(date.getTime())) return 'Fecha inválida';
 
-        if (isNaN(date.getTime())) return 'Fecha inválida';
-
         const region = localStorage.getItem('app_region') || 'CL';
         const locale = region === 'CO' ? 'es-CO' : 'es-CL';
 

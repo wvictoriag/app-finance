@@ -195,7 +195,8 @@ export function AccountModal({
                                 {...register('initial_balance')}
                                 type="number"
                                 step="any"
-                                className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold"
+                                readOnly={!!editingAccount}
+                                className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 p-3 text-sm font-bold ${editingAccount ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-50 dark:bg-slate-700'}`}
                             />
                         </div>
                         <div className="space-y-1">
@@ -210,10 +211,16 @@ export function AccountModal({
                                 {...register('balance')}
                                 type="number"
                                 step="any"
-                                className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3 text-sm font-bold"
+                                readOnly={!!editingAccount}
+                                className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 p-3 text-sm font-bold ${editingAccount ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-50 dark:bg-slate-700'}`}
                             />
                         </div>
                     </div>
+                    {editingAccount && (
+                        <p className="text-[10px] text-slate-400 px-2 mt-1 leading-tight italic">
+                            💡 Los saldos solo se pueden cambiar mediante transacciones o conciliación para mantener la integridad de los datos.
+                        </p>
+                    )}
 
                     <button
                         type="submit"

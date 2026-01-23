@@ -253,19 +253,19 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                     </div>
                 ) : (
                     transactions.map((tx) => (
-                        <div key={tx.id} className={`group flex justify-between items-center p-2.5 rounded-xl transition-all duration-300 cursor-default ${selectedIds.includes(tx.id) ? 'bg-blue-50/50 dark:bg-blue-500/10 shadow-sm border border-blue-500/20' : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}`}>
-                            <div className="flex items-center gap-4 min-w-0">
+                        <div key={tx.id} className={`group flex justify-between items-center p-2 md:p-2.5 rounded-xl transition-all duration-300 cursor-default ${selectedIds.includes(tx.id) ? 'bg-blue-50/50 dark:bg-blue-500/10 shadow-sm border border-blue-500/20' : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}`}>
+                            <div className="flex items-center gap-2 md:gap-4 min-w-0">
                                 <input
                                     type="checkbox"
                                     checked={selectedIds.includes(tx.id)}
                                     onChange={() => handleToggleSelect(tx.id)}
                                     className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 opacity-40 group-hover:opacity-100 checked:opacity-100 transition-opacity"
                                 />
-                                <div className={`w-1 h-6 rounded-full shrink-0 ${tx.destination_account_id ? 'bg-blue-400' :
+                                <div className={`w-1 h-5 md:h-6 rounded-full shrink-0 ${tx.destination_account_id ? 'bg-blue-400' :
                                     Number(tx.amount) < 0 ? 'bg-rose-500' : 'bg-emerald-500'
                                     }`}></div>
                                 <div className="min-w-0">
-                                    <div className="font-bold text-slate-900 dark:text-white text-sm truncate">
+                                    <div className="font-bold text-slate-900 dark:text-white text-xs md:text-sm truncate max-w-[120px] md:max-w-none">
                                         {tx.destination_account_id ? (
                                             <span className="flex items-center gap-2">
                                                 {tx.description || 'Transferencia'}
@@ -274,11 +274,11 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                             tx.description || tx.categories?.name || 'Varios'
                                         )}
                                     </div>
-                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-2 mt-0.5">
-                                        <span className="truncate max-w-[120px]">
+                                    <div className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1 md:gap-2 mt-0.5">
+                                        <span className="truncate max-w-[80px] md:max-w-[120px]">
                                             {tx.destination_account_id ? (
                                                 <span className="flex items-center gap-1">
-                                                    {tx.accounts?.name} <ArrowRightLeft size={10} className="text-blue-400" /> {tx.destination_account?.name}
+                                                    {tx.accounts?.name} <ArrowRightLeft size={8} className="text-blue-400" /> {tx.destination_account?.name}
                                                 </span>
                                             ) : (
                                                 tx.accounts?.name
@@ -290,15 +290,15 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4">
-                                <div className={`font-black text-xs tabular-nums text-right min-w-[100px] ${tx.destination_account_id ? 'text-blue-500' :
+                            <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                                <div className={`font-black text-[10px] md:text-xs tabular-nums text-right min-w-[70px] md:min-w-[100px] ${tx.destination_account_id ? 'text-blue-500' :
                                     Number(tx.amount) < 0 ? 'text-rose-500' : 'text-emerald-500'
                                     }`}>
                                     {formatCurrency(tx.amount)}
                                 </div>
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
-                                    <button onClick={() => onEdit(tx)} className="p-1.5 text-slate-300 hover:text-slate-600 dark:hover:text-white transition-colors"><Pencil size={12} /></button>
-                                    <button onClick={() => onDelete(tx.id)} className="p-1.5 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={12} /></button>
+                                <div className="flex items-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-all scale-90 md:scale-95 group-hover:scale-100">
+                                    <button onClick={() => onEdit(tx)} className="p-1 md:p-1.5 text-slate-300 hover:text-slate-600 dark:hover:text-white transition-colors"><Pencil size={12} /></button>
+                                    <button onClick={() => onDelete(tx.id)} className="p-1 md:p-1.5 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={12} /></button>
                                 </div>
                             </div>
                         </div>

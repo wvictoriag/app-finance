@@ -45,4 +45,12 @@ La aplicación tiene un sistema de seguridad para asegurar que no olvides regist
 
 ---
 
+## 5. Optimización de Pantalla (Pantalla Dividida)
+Si usas la aplicación en **pantalla dividida** (junto a la web de tu banco, por ejemplo):
+- La interfaz se adaptará automáticamente a una vista más compacta.
+- Los textos y espacios se reducirán para que puedas ver toda la información sin necesidad de scroll horizontal.
+- En vistas muy estrechas, el menú lateral se moverá a la parte inferior para maximizar el espacio de trabajo.
+
+---
+
 *Este manual se actualiza automáticamente con cada mejora del sistema.*

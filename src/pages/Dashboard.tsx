@@ -226,50 +226,50 @@ function DashboardContent() {
             </nav>
 
             <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
-                <header className="flex flex-col lg:flex-row lg:items-center justify-between px-6 lg:px-10 py-6 lg:py-8 bg-white/50 dark:bg-transparent border-b border-slate-100 dark:border-white/5 gap-4">
+                <header className="flex flex-col lg:flex-row lg:items-center justify-between px-4 lg:px-10 py-4 lg:py-8 bg-white/50 dark:bg-transparent border-b border-slate-100 dark:border-white/5 gap-4">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
+                            <h1 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tighter truncate max-w-[200px] md:max-w-none">
                                 {currentView === 'dashboard' ? 'Hola, ' + (user?.user_metadata?.alias || user?.email?.split('@')[0]) :
                                     currentView === 'projections' ? 'Simulaciones' : 'Estadísticas'}
                             </h1>
-                            <div className={`h-2.5 w-2.5 rounded-full mt-1 ${connectionStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' :
+                            <div className={`h-2.5 w-2.5 rounded-full mt-1 shrink-0 ${connectionStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' :
                                 connectionStatus === 'offline' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' :
                                     'bg-amber-500 animate-pulse'
                                 }`} />
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Guapacha Finance Intelligence <span className="text-emerald-500 ml-2">v2.0</span></p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v2.0</span></p>
                     </div>
 
-                    <div className="flex items-center gap-6 lg:gap-12">
-                        <div className="flex items-center gap-6 lg:gap-12 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                    <div className="flex items-center gap-4 lg:gap-12 overflow-hidden">
+                        <div className="flex items-center gap-4 lg:gap-12 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
                             <div className="flex flex-col shrink-0">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Patrimonio Neto</span>
-                                <span className="text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Patrimonio Neto</span>
+                                <span className="text-base md:text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tighter">
                                     {formatCurrency(netWorth)}
                                 </span>
                             </div>
                             <div className="flex flex-col shrink-0">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Ingresos Mes</span>
-                                <span className="text-lg lg:text-xl font-black text-emerald-500 tracking-tighter">
+                                <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Ingresos Mes</span>
+                                <span className="text-base md:text-lg lg:text-xl font-black text-emerald-500 tracking-tighter">
                                     {formatCurrency(monthIncome)}
                                 </span>
                             </div>
                             <div className="flex flex-col shrink-0">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Gastos Mes</span>
-                                <span className="text-lg lg:text-xl font-black text-rose-500 tracking-tighter">
+                                <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Gastos Mes</span>
+                                <span className="text-base md:text-lg lg:text-xl font-black text-rose-500 tracking-tighter">
                                     {formatCurrency(monthExpenses)}
                                 </span>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4 border-l border-slate-200 dark:border-white/5 pl-6 lg:pl-12">
+                        <div className="flex items-center gap-3 border-l border-slate-200 dark:border-white/5 pl-4 lg:pl-12 shrink-0">
                             <RegionSelector />
                             <button
                                 onClick={handleLogout}
                                 className="flex items-center gap-2 text-slate-400 hover:text-rose-500 transition-colors group"
                             >
-                                <span className="text-[10px] font-black uppercase tracking-widest hidden md:block group-hover:underline decoration-2 underline-offset-4">Cerrar Sesión</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest hidden lg:block group-hover:underline decoration-2 underline-offset-4">Salir</span>
                                 <LogOut size={18} />
                             </button>
                         </div>

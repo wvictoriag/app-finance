@@ -50,7 +50,17 @@ export function AccountModal({
                 await updateAccount({ id: editingAccount.id, updates: data });
                 toast.success('Cuenta actualizada');
             } else {
-                await createAccount(data);
+                // For NEW accounts, if the user didn't change the default balance (0), 
+                // we assume it should match the initial balance for a squared start.
+                const initial = Number(data.initial_balance) || 0;
+                const balance = Number(data.balance) || 0;
+
+                const finalData = {
+                    ...data,
+                    balance: balance === 0 ? initial : balance
+                };
+
+                await createAccount(finalData);
                 toast.success('Cuenta creada');
             }
             onClose();

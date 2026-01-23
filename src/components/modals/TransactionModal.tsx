@@ -65,7 +65,7 @@ export function TransactionModal({
     const onSubmit = async (data: TransactionFormData) => {
         try {
             let finalAmount = Math.abs(data.amount);
-            if (data.type === 'expense' || data.type === 'transfer') {
+            if (data.type === 'expense') {
                 finalAmount = -finalAmount;
             }
 

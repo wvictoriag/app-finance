@@ -252,57 +252,75 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                         <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest">Sin movimientos</p>
                     </div>
                 ) : (
-                    transactions.map((tx) => (
-                        <div key={tx.id} className={`group flex justify-between items-center p-2 md:p-2.5 rounded-xl transition-all duration-300 cursor-default ${selectedIds.includes(tx.id) ? 'bg-blue-50/50 dark:bg-blue-500/10 shadow-sm border border-blue-500/20' : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}`}>
-                            <div className="flex items-center gap-2 md:gap-4 min-w-0">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedIds.includes(tx.id)}
-                                    onChange={() => handleToggleSelect(tx.id)}
-                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 opacity-40 group-hover:opacity-100 checked:opacity-100 transition-opacity"
-                                />
-                                <div className={`w-1 h-5 md:h-6 rounded-full shrink-0 ${tx.destination_account_id ? 'bg-blue-400' :
-                                    Number(tx.amount) < 0 ? 'bg-rose-500' : 'bg-emerald-500'
-                                    }`}></div>
-                                <div className="min-w-0">
-                                    <div className="font-bold text-slate-900 dark:text-white text-xs md:text-sm truncate max-w-[120px] md:max-w-none">
-                                        {tx.destination_account_id ? (
-                                            <span className="flex items-center gap-2">
-                                                {tx.description || 'Transferencia'}
-                                            </span>
-                                        ) : (
-                                            tx.description || tx.categories?.name || 'Varios'
-                                        )}
-                                    </div>
-                                    <div className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1 md:gap-2 mt-0.5">
-                                        <span className="truncate max-w-[80px] md:max-w-[120px]">
-                                            {tx.destination_account_id ? (
-                                                <span className="flex items-center gap-1">
-                                                    {tx.accounts?.name} <ArrowRightLeft size={8} className="text-blue-400" /> {tx.destination_account?.name}
+                    transactions.map((tx) => {
+                        const isTransfer = !!tx.destination_account_id;
+                        let displayAmount = Number(tx.amount);
+                        let statusColor = isTransfer ? 'bg-blue-400' : (displayAmount < 0 ? 'bg-rose-500' : 'bg-emerald-500');
+                        let amountColor = isTransfer ? 'text-blue-500' : (displayAmount < 0 ? 'text-rose-500' : 'text-emerald-500');
+
+                        // Context-aware logic for transfers
+                        if (isTransfer && selectedAccount) {
+                            if (tx.account_id === selectedAccount.id) {
+                                // We are looking at the SOURCE account: it's an OUTGOING transfer (Expense)
+                                displayAmount = -Math.abs(displayAmount);
+                                statusColor = 'bg-rose-500';
+                                amountColor = 'text-rose-500';
+                            } else if (tx.destination_account_id === selectedAccount.id) {
+                                // We are looking at the DESTINATION account: it's an INCOMING transfer (Income)
+                                displayAmount = Math.abs(displayAmount);
+                                statusColor = 'bg-emerald-500';
+                                amountColor = 'text-emerald-500';
+                            }
+                        }
+
+                        return (
+                            <div key={tx.id} className={`group flex justify-between items-center p-2 md:p-2.5 rounded-xl transition-all duration-300 cursor-default ${selectedIds.includes(tx.id) ? 'bg-blue-50/50 dark:bg-blue-500/10 shadow-sm border border-blue-500/20' : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}`}>
+                                <div className="flex items-center gap-2 md:gap-4 min-w-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.includes(tx.id)}
+                                        onChange={() => handleToggleSelect(tx.id)}
+                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 opacity-40 group-hover:opacity-100 checked:opacity-100 transition-opacity"
+                                    />
+                                    <div className={`w-1 h-5 md:h-6 rounded-full shrink-0 ${statusColor}`}></div>
+                                    <div className="min-w-0">
+                                        <div className="font-bold text-slate-900 dark:text-white text-xs md:text-sm truncate max-w-[120px] md:max-w-none">
+                                            {isTransfer ? (
+                                                <span className="flex items-center gap-2">
+                                                    {tx.description || 'Transferencia'}
                                                 </span>
                                             ) : (
-                                                tx.accounts?.name
+                                                tx.description || tx.categories?.name || 'Varios'
                                             )}
-                                        </span>
-                                        <span className="opacity-30">•</span>
-                                        <span>{formatDate(tx.date)}</span>
+                                        </div>
+                                        <div className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1 md:gap-2 mt-0.5">
+                                            <span className="truncate max-w-[80px] md:max-w-[120px]">
+                                                {isTransfer ? (
+                                                    <span className="flex items-center gap-1">
+                                                        {tx.accounts?.name} <ArrowRightLeft size={8} className="text-blue-400" /> {tx.destination_account?.name}
+                                                    </span>
+                                                ) : (
+                                                    tx.accounts?.name
+                                                )}
+                                            </span>
+                                            <span className="opacity-30">•</span>
+                                            <span>{formatDate(tx.date)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                                    <div className={`font-black text-[10px] md:text-xs tabular-nums text-right min-w-[70px] md:min-w-[100px] ${amountColor}`}>
+                                        {formatCurrency(displayAmount)}
+                                    </div>
+                                    <div className="flex items-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-all scale-90 md:scale-95 group-hover:scale-100">
+                                        <button onClick={() => onEdit(tx)} className="p-1 md:p-1.5 text-slate-300 hover:text-slate-600 dark:hover:text-white transition-colors"><Pencil size={12} /></button>
+                                        <button onClick={() => onDelete(tx.id)} className="p-1 md:p-1.5 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={12} /></button>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                                <div className={`font-black text-[10px] md:text-xs tabular-nums text-right min-w-[70px] md:min-w-[100px] ${tx.destination_account_id ? 'text-blue-500' :
-                                    Number(tx.amount) < 0 ? 'text-rose-500' : 'text-emerald-500'
-                                    }`}>
-                                    {formatCurrency(tx.amount)}
-                                </div>
-                                <div className="flex items-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-all scale-90 md:scale-95 group-hover:scale-100">
-                                    <button onClick={() => onEdit(tx)} className="p-1 md:p-1.5 text-slate-300 hover:text-slate-600 dark:hover:text-white transition-colors"><Pencil size={12} /></button>
-                                    <button onClick={() => onDelete(tx.id)} className="p-1 md:p-1.5 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={12} /></button>
-                                </div>
-                            </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
         </div>

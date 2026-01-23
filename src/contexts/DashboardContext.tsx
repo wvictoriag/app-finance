@@ -79,7 +79,28 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
         if (!categories || !monthTx) return [];
         const totals = (monthTx || []).reduce((acc: Record<string, number>, tx) => {
             if (tx.category_id) {
-                acc[tx.category_id] = (acc[tx.category_id] || 0) + Number(tx.amount);
+                const category = categories.find(c => c.id === tx.category_id);
+                if (!category) return acc;
+
+                const isTransfer = !!tx.destination_account_id;
+                let amount = Number(tx.amount); // Usually negative if expense/source
+
+                if (selectedAccount) {
+                    // Account-specific view: Contextualize the amount
+                    if (isTransfer) {
+                        if (tx.account_id === selectedAccount.id) amount = -Math.abs(amount); // Outflow
+                        else if (tx.destination_account_id === selectedAccount.id) amount = Math.abs(amount); // Inflow
+                        else return acc; // Not related
+                    } else {
+                        if (tx.account_id !== selectedAccount.id) return acc;
+                        // For non-transfers, use the sign relative to global (Income +, Expense -)
+                    }
+                } else {
+                    // Global view: Exclude transfers from monthly execution lists to prevent double counting
+                    if (isTransfer) return acc;
+                }
+
+                acc[tx.category_id] = (acc[tx.category_id] || 0) + amount;
             }
             return acc;
         }, {});
@@ -94,14 +115,32 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     const { monthIncome, monthExpenses } = useMemo(() => {
         if (!monthTx || !Array.isArray(monthTx)) return { monthIncome: 0, monthExpenses: 0 };
         return monthTx.reduce((acc, tx) => {
-            const amt = Number(tx?.amount || 0);
-            if (!tx?.destination_account_id) {
-                if (amt > 0) acc.monthIncome += amt;
-                else acc.monthExpenses += Math.abs(amt);
+            const isTransfer = !!tx.destination_account_id;
+            const amt = Number(tx.amount);
+            let contextualAmount = 0;
+
+            if (selectedAccount) {
+                // If we are in an account-specific view, we want the Cash Flow for THAT account
+                if (isTransfer) {
+                    if (tx.account_id === selectedAccount.id) contextualAmount = -Math.abs(amt);
+                    else if (tx.destination_account_id === selectedAccount.id) contextualAmount = Math.abs(amt);
+                    else return acc; // Not related to this account
+                } else {
+                    if (tx.account_id === selectedAccount.id) contextualAmount = amt;
+                    else return acc; // Not related to this account
+                }
+            } else {
+                // Global view: exclude internal transfers to avoid "fake" income/expense
+                if (isTransfer) return acc;
+                contextualAmount = amt;
             }
+
+            if (contextualAmount > 0) acc.monthIncome += contextualAmount;
+            else if (contextualAmount < 0) acc.monthExpenses += Math.abs(contextualAmount);
+
             return acc;
         }, { monthIncome: 0, monthExpenses: 0 });
-    }, [monthTx]);
+    }, [monthTx, selectedAccount]);
 
     const netWorth = useMemo(() => {
         return accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);

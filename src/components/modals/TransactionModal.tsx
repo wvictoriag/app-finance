@@ -65,7 +65,7 @@ export function TransactionModal({
     const onSubmit = async (data: TransactionFormData) => {
         try {
             let finalAmount = Math.abs(data.amount);
-            if (data.type === 'expense') {
+            if (data.type === 'expense' || data.type === 'transfer') {
                 finalAmount = -finalAmount;
             }
 
@@ -74,7 +74,7 @@ export function TransactionModal({
                 date: data.date,
                 amount: finalAmount,
                 description: data.description,
-                category_id: data.type === 'transfer' ? null : data.category_id,
+                category_id: data.category_id || null,
                 destination_account_id: data.type === 'transfer' ? data.destination_account_id : null
             };
 
@@ -183,19 +183,20 @@ export function TransactionModal({
                         </div>
                     </div>
 
-                    {txType === 'transfer' ? (
-                        <div>
-                            <label htmlFor="destination_account_id" className="sr-only">Cuenta Destino</label>
-                            <select
-                                id="destination_account_id"
-                                {...register('destination_account_id')}
-                                className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3"
-                            >
-                                <option value="">Cuenta Destino...</option>
-                                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                            </select>
-                        </div>
-                    ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                        {txType === 'transfer' && (
+                            <div>
+                                <label htmlFor="destination_account_id" className="sr-only">Cuenta Destino</label>
+                                <select
+                                    id="destination_account_id"
+                                    {...register('destination_account_id')}
+                                    className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3"
+                                >
+                                    <option value="">Cuenta Destino...</option>
+                                    {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
+                                </select>
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="category_id" className="sr-only">Categoría</label>
                             <select
@@ -203,14 +204,14 @@ export function TransactionModal({
                                 {...register('category_id')}
                                 className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3"
                             >
-                                <option value="">Categoría...</option>
+                                <option value="">{txType === 'transfer' ? 'Categoría (Opcional)...' : 'Categoría...'}</option>
                                 {categories
                                     .filter(c => txType === 'income' ? c.type === 'Ingresos' : c.type !== 'Ingresos')
                                     .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
                                 }
                             </select>
                         </div>
-                    )}
+                    </div>
 
                     <div>
                         <label htmlFor="amount" className="sr-only">Monto</label>

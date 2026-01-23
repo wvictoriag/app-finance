@@ -24,7 +24,7 @@ export function AccountModal({
     const { deleteAccount } = useDashboard(); // Just for consistency
     const { createAccount, updateAccount } = useAccounts();
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<AccountFormData>({
+    const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<AccountFormData>({
         resolver: zodResolver(accountSchema) as any
     });
 
@@ -156,6 +156,16 @@ export function AccountModal({
                                 role="alert"
                             >
                                 {errors.type.message}
+                            </p>
+                        )}
+                        {watch('type') === 'Receivable' && (
+                            <p className="text-[10px] text-blue-500 font-bold px-2 mt-2 leading-tight">
+                                💡 Ingresa un saldo POSITIVO (es dinero que te deben y suma a tu patrimonio).
+                            </p>
+                        )}
+                        {watch('type') === 'Payable' && (
+                            <p className="text-[10px] text-rose-500 font-bold px-2 mt-2 leading-tight">
+                                💡 Ingresa un saldo NEGATIVO (es dinero que tú debes y resta de tu patrimonio).
                             </p>
                         )}
                     </div>

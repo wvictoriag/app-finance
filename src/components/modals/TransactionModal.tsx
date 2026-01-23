@@ -204,7 +204,10 @@ export function TransactionModal({
                                 className="w-full rounded-xl border-slate-200 dark:border-slate-700 border bg-slate-50 dark:bg-slate-700 p-3"
                             >
                                 <option value="">Categoría...</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                {categories
+                                    .filter(c => txType === 'income' ? c.type === 'Ingresos' : c.type !== 'Ingresos')
+                                    .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+                                }
                             </select>
                         </div>
                     )}

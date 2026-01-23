@@ -1,100 +1,48 @@
-# 📘 Manual de Usuario - Guapacha Finance Intelligence (v2.0)
+# Manual de Usuario - Guapacha Finance
 
-Bienvenido a **Guapacha Finance**, tu sistema inteligente de gestión financiera personal. Este manual está diseñado para guiarte en el uso de la plataforma durante la fase de pruebas.
+Bienvenido al manual oficial de **Guapacha Finance**. Este documento te ayudará a entender cómo configurar y sacar el máximo provecho de la aplicación para llevar un control total de tus finanzas.
 
----
+## 1. Configuración Inicial
+Al entrar por primera vez, verás el panel principal. Lo primero es configurar tus cuentas y categorías.
 
-## 1. Acceso y Seguridad 🔐
-
-### Inicio de Sesión
-- **Acceso**: Ingresa con tu correo electrónico y contraseña registrados.
-- **Seguridad**: El sistema cuenta con indicadores de conexión en tiempo real.
-    - 🟢 **Sistema Activo**: Conexión estable.
-    - 🔴 **Falla Crítica**: Sin conexión a internet o servidor.
-    - ⚪ **Sincronizando**: Estableciendo comunicación.
-
-### Configuración Regional (NUEVO) 🌎
-Si estás en **Colombia** o quieres cambiar la moneda:
-- En la parte superior del Dashboard, verás un botón con la bandera de tu región actual (ej: 🇨🇱 Chile).
-- Haz clic allí y selecciona **Colombia (COP)**.
-- El sistema actualizará automáticamente todos los símbolos de moneda y formatos de fecha.
-
-### Recuperación de Contraseña
-- En la pantalla de login, utiliza la opción **"¿Olvidaste tu contraseña?"** para recibir un enlace de recuperación en tu correo.
+### Tipos de Cuentas
+Al crear una cuenta, debes seleccionar el tipo correcto para que el **Patrimonio Neto** se calcule bien:
+- **Cuentas Corrientes/Vista/Ahorro/Efectivo**: Suman a tu patrimonio. Ingresa saldos positivos.
+- **Tarjetas/Líneas de Crédito**: Restan de tu patrimonio si están usadas. Ingresa el límite total y el saldo actual (el saldo suele ser negativo si debes dinero).
+- **Cuentas por Cobrar (CxC)**: Dinero que te deben a ti. **Ingresa siempre saldos POSITIVOS**.
+- **Cuentas por Pagar (CxP)**: Dinero que tú debes a otros. **Ingresa siempre saldos NEGATIVOS**.
 
 ---
 
-## 2. Panel Principal (Dashboard) 🖥️
+## 2. Gestión de Transacciones
+La aplicación permite tres tipos de movimientos:
 
-El escritorio se divide en tres columnas estratégicas para un control total:
+1.  **Ingreso (Verde)**: Dinero que entra a una cuenta. El sistema filtrará automáticamente las categorías de tipo "Ingreso".
+2.  **Egreso (Rojo)**: Dinero que sale de una cuenta (gastos). El sistema filtrará las categorías de gastos y ahorros.
+3.  **Transferencia (Azul)**: Movimiento de dinero entre dos cuentas propias. No requiere categoría.
 
-### A. Columna Izquierda: Mis Cuentas 💳
-Aquí gestionas tu patrimonio líquido.
-- **Resumen**: Muestra el saldo total y estado de cada cuenta (Cuenta Corriente, Efectivo, Línea de Crédito, etc.).
-- **Indicadores de Estado**:
-    - **Círculo Verde ✅**: Cuenta cuadrada (el saldo coincide con los movimientos).
-    - **Etiqueta Naranja "DESCUADRADA" ⚠️**: El saldo real difiere de la suma de transacciones.
-- **Acciones**:
-    - **Añadir Cuenta**: Botón `+` en la esquina superior derecha.
-    - **Reconciliar**: Haz clic en el botón de lápiz (✏️) al pasar el mouse sobre una cuenta para ajustar su saldo real manualmente.
-
-### B. Columna Central: Ejecución (Presupuesto) 📊
-El corazón de tu estrategia financiera. Controla ingresos vs. gastos del mes seleccionado.
-- **Navegación**: Usa las flechas `<` `>` en la parte superior para cambiar de mes.
-- **Categorías**: Tus gastos se agrupan en Ingresos, Gastos Fijos, Gastos Variables y Ahorro.
-- **Barras de Progreso**:
-    - **Verde**: Dentro del presupuesto.
-    - **Rojo**: Presupuesto excedido.
-- **NUEVO: Visualización Gráfica (Insights)** 🚀
-    - Haz clic en el icono de **Gráfico (📊)** junto al título "CONTROL MENSUAL".
-    - **Distribución**: Mira un gráfico de dona con tus gastos por categoría.
-    - **Flujo**: Compara tus Ingresos vs. Gastos en un gráfico de barras.
-
-### C. Columna Derecha: Movimientos (Transacciones) 💸
-Bitácora de tu actividad financiera reciente.
-- **Filtros Rápidos**: Alterna entre `TODO`, `INGRESOS`, `EGRESOS` y `TRANSF`.
-- **Buscador**: Encuentra gastos antiguos por nombre (ej: "Netflix").
-- **Nueva Transacción**: Botón flotante gigante `+` en la esquina inferior derecha.
+### Caso Práctico: Préstamos y Pagos (Caso "Frank")
+Si alguien te debe dinero y hay movimientos, se registra así:
+- **Préstamo nuevo**: Haz una **Transferencia** desde tu "Cuenta Corriente" hacia la "Cuenta por Cobrar (Frank)". Esto disminuye tu banco y aumenta lo que Frank te debe.
+- **Te pagan lo que deben**: Haz una **Transferencia** desde la "Cuenta por Cobrar (Frank)" hacia tu "Cuenta Corriente". Esto disminuye la deuda y aumenta tu dinero en el banco.
 
 ---
 
-## 3. Gestión de Transacciones 📝
+## 3. Conciliación y "Descuadre"
+La aplicación tiene un sistema de seguridad para asegurar que no olvides registrar transacciones.
 
-### Registrar un Movimiento
-Al pulsar el botón `+`, se abrirá el formulario:
-1.  **Tipo**: Elige entre Gasto, Ingreso o Transferencia.
-2.  **Monto**: Ingresa el valor.
-3.  **Cuenta**: Selecciona de dónde sale o entra el dinero.
-4.  **Categoría**: Clasifícalo correctamente (ej: Supermercado, Transporte). 
-    *   *Nota*: Las transferencias no requieren categoría.
-5.  **Descripción**: Detalle opcional (ej: "Compra semanal").
-
-### Editar / Eliminar
-- Haz clic sobre cualquier transacción en la lista de la derecha para editar sus datos o eliminarla si fue un error.
+- **Saldo en App**: Es el resultado de tu saldo inicial más todos los movimientos registrados.
+- **Saldo Real**: Es el saldo que ves en tu banco real.
+- **Descuadre**: Si el Saldo Real y el de la App no coinciden, verás un aviso de **"DESCUADRADA"**.
+- **Solución**: Debes registrar las transacciones que te faltan hasta que el descuadre llegue a $0. Si no sabes por qué falta dinero, puedes usar el botón de **Reconciliar** (icono de balanza) para forzar el saldo al valor real, lo cual actualizará la fecha de actualización de la cuenta.
 
 ---
 
-## 4. Funciones Avanzadas 🚀
-
-### Modo Oscuro 🌙
-- En la barra lateral izquierda (menú), el icono de "Luna" activa el modo oscuro para reducir la fatiga visual nocturna.
-
-### Proyecciones (Futuro) 🔮
-Accede desde el menú lateral para ver simulaciones financieras:
-- **Proyección 5 Años**: Estimación de tu patrimonio a mediano plazo basado en tu ahorro actual.
-- **Proyección 30 Años**: Simulación de largo plazo para planificación de retiro.
+## 4. Funciones Avanzadas
+- **Selección Masiva**: En la lista de movimientos, puedes pasar el ratón para ver casillas de verificación. Permite borrar múltiples transacciones de una sola vez.
+- **Filtros por URL**: Si filtras una cuenta o una fecha y refrescas la página, la aplicación recordará dónde estabas.
+- **Alertas de Presupuesto**: En el panel de "Control Mensual", las categorías se pondrán en rojo si te has pasado del presupuesto asignado.
 
 ---
 
-## 5. Glosario de Iconos ℹ️
-
-| Icono | Significado |
-| :---: | :--- |
-| 📊 / ☰ | Alternar entre vista de Gráficos y Lista en el panel central. |
-| ✏️ | Editar cuenta o transacción. |
-| 🗑️ | Eliminar elemento. |
-| 🔄 | Reconciliar (ajustar saldo) cuenta. |
-
----
-
-> **Nota para el Tester**: Si encuentras algún comportamiento inesperado, por favor repórtalo indicando qué estabas haciendo y qué mensaje de error apareció (si hubo uno).
+*Este manual se actualiza automáticamente con cada mejora del sistema.*

@@ -29,6 +29,8 @@ export const useAccounts = () => {
         mutationFn: (id: string) => api.deleteAccount(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            queryClient.invalidateQueries({ queryKey: ['transaction-sums'] });
         },
     });
 

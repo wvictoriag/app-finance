@@ -2,61 +2,93 @@
 
 Bienvenido al manual oficial de **Guapacha Finance**. Este documento te ayudará a entender cómo configurar y sacar el máximo provecho de la aplicación para llevar un control total de tus finanzas.
 
-## 1. Configuración Inicial
-Al entrar por primera vez, verás el panel principal. Lo primero es configurar tus cuentas y categorías.
+---
 
-### Tipos de Cuentas
-Al crear una cuenta, debes seleccionar el tipo correcto para que el **Patrimonio Neto** se calcule bien:
-- **Cuentas Corrientes/Vista/Ahorro/Efectivo**: Suman a tu patrimonio. Ingresa saldos positivos.
-- **Tarjetas/Líneas de Crédito**: Restan de tu patrimonio si están usadas. Ingresa el límite total y el saldo actual (el saldo suele ser negativo si debes dinero).
-- **Cuentas por Cobrar (CxC)**: Dinero que te deben a ti. **Ingresa siempre saldos POSITIVOS**.
-- **Cuentas por Pagar (CxP)**: Dinero que tú debes a otros. **Ingresa siempre saldos NEGATIVOS**.
+## 🚀 Guía de Inicio Rápido para Nuevos Usuarios
+
+Si acabas de registrarte, sigue este flujo para configurar tu ecosistema financiero correctamente:
+
+### Paso 1: Configurar el País y Categorías
+La aplicación detecta automáticamente tu región (o puedes cambiarla en el seleccionador superior). Esto cargará las categorías de gastos e ingresos predeterminadas para tu país (ej. IVA en Chile, 4x1000 en Colombia).
+
+### Paso 2: Crear tus Cuentas (El Cimiento)
+Ve al panel de **Cuentas** y pulsa el botón `+`.
+- **Saldo Inicial**: Ingresa cuánto dinero tenías antes de empezar a registrar movimientos (ej. al 1 de enero).
+- **Saldo Actual**: **DEBE COINCIDIR** con el saldo inicial si estás empezando hoy. Si no coinciden, verás un aviso de "Descuadrada" inmediatamente.
+- **Tipos de Cuenta**: Selecciona "Checking" para cuentas corrientes, "Credit" para tarjetas, y "Receivable" para deudas que otros tienen contigo (CxC).
+
+### Paso 3: Registrar tu Primer Ingreso
+Añade una transacción de tipo **Ingreso**. Esto alimentará tu patrimonio y aparecerá en las barras verdes de tus gráficos.
+
+---
+
+## 1. Configuración Detallada de Cuentas
+Al crear una cuenta, la categoría define cómo afecta al **Patrimonio Neto**:
+
+| Tipo de Cuenta | Impacto en Patrimonio | Recomendación de Saldo |
+| :--- | :--- | :--- |
+| **Corriente / Ahorro / Efectivo** | Suma (+) | Ingresa saldos **POSITIVOS** (lo que tienes). |
+| **Tarjetas / Líneas de Crédito** | Resta (-) | Ingresa saldos **NEGATIVOS** (lo que debes). |
+| **Cuentas por Cobrar (CxC)** | Suma (+) | Ingresa saldos **POSITIVOS** (lo que te deben). |
+| **Cuentas por Pagar (CxP)** | Resta (-) | Ingresa saldos **NEGATIVOS** (lo que debes pagar). |
+| **Inversiones / Activos / Bienes** | Suma (+) | Ingresa saldos **POSITIVOS** (valor del bien). |
+
+### 🤔 ¿Por qué usar números negativos?
+Para que el **Patrimonio Neto** sea real, la App hace una suma matemática simple. 
+
+**Ejemplo:**
+- Tienes $100.000 en el **Banco** (+100.000)
+- Debes $40.000 en la **Tarjeta** (-40.000)
+- **Cálculo:** `100.000 + (-40.000) = $60.000` (Tu riqueza neta real).
+
+> **💡 Nota Visual**: Aunque en la base de datos la tarjeta sea negativa, en el panel de cuentas verás el número positivo con la etiqueta **"Deuda Tarjeta"**. Esto lo hacemos para que sea más fácil de leer, pero el cálculo matemático siempre respetará el signo negativo.
+
+---
 
 > [!IMPORTANT]
-> **Sincronización Inicial**: Al crear una cuenta por primera vez, asegúrate de que el **Saldo Inicial** (lo que había antes de empezar a registrar) y el **Saldo Actual** coincidan en ese momento. Esto permite que la aplicación empiece a "contar" desde el punto correcto.
+> **Sincronización Inicial**: Siempre asegúrate de que el **Saldo Inicial** y el **Saldo Actual** coincidan al crear la cuenta. La App empezará a contar basándose en el saldo inicial más todos los movimientos que registres.
 
 ---
 
 ## 2. Gestión de Transacciones
-La aplicación permite tres tipos de movimientos:
+Existen tres tipos de movimientos fundamentales:
 
-1.  **Ingreso (Verde)**: Dinero que entra a una cuenta.
-2.  **Egreso (Rojo)**: Dinero que sale de una cuenta.
-3.  **Transferencia (Azul)**: Movimiento entre dos cuentas. 
-    - **Categorización**: ¡Ahora puedes categorizar las transferencias! 
-    - **Uso PRO**: Si Frank te paga, marca la transferencia con la categoría "Cobros Frank" o similar. Esto hará que el dinero aparezca en tus gráficos de ingresos del mes.
+1.  **Ingreso (Verde)**: Dinero que entra a tu patrimonio desde el exterior.
+2.  **Egreso (Rojo)**: Dinero que sale de tu patrimonio (compras, gastos).
+3.  **Transferencia (Azul)**: Movimiento entre tus propias cuentas o cobro de deudas.
+    - **Categorización**: ¡Ahora puedes categorizar las transferencias! Si marcas un cobro de deuda como categoría "Ingreso", aparecerá en tus estadísticas de flujo de caja.
 
-### Caso Práctico: Préstamos y Pagos (Caso "Frank")
-Si Frank te debe $28.000:
-1.  **Configuración**: Creas la cuenta "Frank" (CxC) con Saldo Inicial $28.000 y Saldo Actual $28.000.
-2.  **El Pago**: Creas una **Transferencia** desde "Frank" hacia tu "Cuenta Corriente" por $28.000 y asígnale una categoría (opcional).
-3.  **Resultado**: 
-    - En la vista de ** Frank**, verás un egreso de $28.000 (deuda saldada).
-    - En la vista de **Cuenta Corriente**, verás un **ingreso de $28.000** reflejado tanto en la lista como en los gráficos de barra.
-
----
-
-## 3. Gráficos e Inteligencia de Datos
-Los gráficos de "Ejecución" han sido mejorados para ser **contextuales**:
-
-- **Vista Global (Sin filtro)**: Los totales de "Ingresos Mes" y "Gastos Mes" en la parte superior solo muestran el dinero que entró o salió de tu patrimonio total. Las transferencias internas se ignoran para no dar falsos positivos.
-- **Vista de Cuenta (Con filtro)**: Si seleccionas una cuenta específica (ej: Cuenta Corriente), los gráficos y totales cambiarán para mostrar el **Flujo de Caja** de esa cuenta. Las transferencias aparecerán como ingresos o egresos según corresponda, para que coincidan exactamente con lo que ves en tu banco.
+### Caso Práctico: Caso "Frank"
+Para gestionar una deuda que Frank tiene contigo de $28.000:
+1.  **Inicio**: Crea la cuenta "Frank" (CxC) con Saldo Inicial y Actual de $28.000.
+2.  **El Pago**: Registra una **Transferencia** desde "Frank" hacia tu "Cuenta Corriente" por $28.000.
+3.  **Resultado Contextual**: 
+    - Al filtrar por **Frank**, verás un egreso (la deuda desaparece).
+    - Al filtrar por **Cuenta Corriente**, verás un ingreso de dinero real.
 
 ---
 
-## 4. Funciones Avanzadas
-- **Selección Masiva**: En la lista de movimientos, puedes pasar el ratón para ver casillas de verificación. Permite borrar múltiples transacciones de una sola vez.
-- **Filtros por URL**: Si filtras una cuenta o una fecha y refrescas la página, la aplicación recordará dónde estabas.
-- **Alertas de Presupuesto**: En el panel de "Control Mensual", las categorías se pondrán en rojo si te has pasado del presupuesto asignado.
+## 3. Gráficos e Inteligencia Contextual
+Los gráficos se adaptan a lo que estás mirando para darte la respuesta correcta:
+
+- **Vista Global (Sin filtros)**: Muestra tu **Riqueza Neta**. Las transferencias internas se ocultan para no "inflar" tus ingresos.
+- **Vista de Cuenta (Con filtro)**: Muestra el **Flujo de Caja**. Si seleccionas tu banco, verás *todo* lo que pasó allí, incluyendo las transferencias. 
 
 ---
 
-## 5. Optimización de Pantalla (Pantalla Dividida)
-Si usas la aplicación en **pantalla dividida** (junto a la web de tu banco, por ejemplo):
-- La interfaz se adaptará automáticamente a una vista más compacta.
-- Los textos y espacios se reducirán para que puedas ver toda la información sin necesidad de scroll horizontal.
-- En vistas muy estrechas, el menú lateral se moverá a la parte inferior para maximizar el espacio de trabajo.
+## 4. Conciliación y "Descuadres"
+Si una cuenta marca **"DESCUADRADA"**:
+1. Revisa si olvidaste registrar algún movimiento.
+2. Si no sabes por qué falta dinero, usa el botón de **Reconciliar** (icono de balanza).
+3. Ingresa el monto que ves exactamente en tu banco hoy. La App ajustará la "Realidad" automáticamente.
 
 ---
 
-*Este manual se actualiza automáticamente con cada mejora del sistema.*
+## 5. Funciones Avanzadas
+- **Optimización de Pantalla**: La App funciona en **pantalla dividida**. La interfaz se compactará sola para que veas tus saldos mientras revisas tu banco.
+- **Selección Masiva**: Pasa el ratón por la izquierda de los movimientos para borrarlos por lotes.
+- **Alertas de Presupuesto**: Las barras se pondrán rojas si superas lo planeado en el "Control Mensual".
+
+---
+
+*Este manual se actualiza periódicamente con las últimas mejoras de Guapacha Intelligence.*

@@ -275,7 +275,7 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
 
                         return (
                             <div key={tx.id} className={`group flex justify-between items-center p-2 md:p-2.5 rounded-xl transition-all duration-300 cursor-default ${selectedIds.includes(tx.id) ? 'bg-blue-50/50 dark:bg-blue-500/10 shadow-sm border border-blue-500/20' : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}`}>
-                                <div className="flex items-center gap-2 md:gap-4 min-w-0">
+                                <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
                                     <input
                                         type="checkbox"
                                         checked={selectedIds.includes(tx.id)}
@@ -283,8 +283,8 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                         className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 opacity-40 group-hover:opacity-100 checked:opacity-100 transition-opacity"
                                     />
                                     <div className={`w-1 h-5 md:h-6 rounded-full shrink-0 ${statusColor}`}></div>
-                                    <div className="min-w-0">
-                                        <div className="font-bold text-slate-900 dark:text-white text-xs md:text-sm truncate max-w-[120px] md:max-w-none">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="font-bold text-slate-900 dark:text-white text-xs md:text-sm truncate">
                                             {isTransfer ? (
                                                 <span className="flex items-center gap-2">
                                                     {tx.description || 'Transferencia'}
@@ -294,22 +294,22 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                             )}
                                         </div>
                                         <div className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1 md:gap-2 mt-0.5">
-                                            <span className="truncate max-w-[80px] md:max-w-[120px]">
+                                            <span className="truncate flex-1 min-w-0">
                                                 {isTransfer ? (
                                                     <span className="flex items-center gap-1">
-                                                        {tx.accounts?.name} <ArrowRightLeft size={8} className="text-blue-400" /> {tx.destination_account?.name}
+                                                        {tx.accounts?.name} <ArrowRightLeft size={8} className="text-blue-400 shrink-0" /> {tx.destination_account?.name}
                                                     </span>
                                                 ) : (
                                                     tx.accounts?.name
                                                 )}
                                             </span>
-                                            <span className="opacity-30">•</span>
-                                            <span>{formatDate(tx.date)}</span>
+                                            <span className="opacity-30 shrink-0">•</span>
+                                            <span className="shrink-0">{formatDate(tx.date)}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                                <div className="flex items-center gap-2 md:gap-4 shrink-0 ml-4">
                                     <div className={`font-black text-[10px] md:text-xs tabular-nums text-right min-w-[70px] md:min-w-[100px] ${amountColor}`}>
                                         {formatCurrency(displayAmount)}
                                     </div>

@@ -91,24 +91,21 @@ Si una cuenta marca **"DESCUADRADA"**:
 
 ---
 
-## 6. Simulaciones Patrimoniales (Proyecciones)
-Esta sección de la App no es un oráculo, sino un **Laboratorio Financiero** donde puedes jugar a "Qué pasaría si...".
+## 6. Validador de Liquidez y Planes
+Esta sección de la App no es para adivinar el futuro, sino un **Laboratorio de Validación** para asegurar que tus planes sean financieramente viables.
 
-### 🤔 ¿Por qué se llama "Simulación"?
-Se llama así porque crea un modelo matemático basado en tu comportamiento real para proyectar el futuro. 
-- **Línea Base (Azul)**: Es tu futuro si no haces nada distinto a los últimos 6 meses.
-- **Línea Simulada (Roja)**: Es como cambiaría tu riqueza si ocurrieran eventos específicos que tú definas.
+### ⚖️ Patrimonio vs. Liquidez
+A diferencia de otras apps, aquí distinguimos entre dos realidades:
+- **Patrimonio (Línea Azul)**: Representa todo lo que posees (dinero, bienes, cuentas por cobrar) menos tus deudas. Es tu "riqueza teórica".
+- **Liquidez (Línea Verde)**: Representa el **dinero real en tu bolsillo/banco** hoy. 
 
-### 💰 ¿Dónde están mis deudas y la plata por cobrar?
-El simulador **YA LOS INCLUYE** desde el primer punto del gráfico:
-1.  **Mes 0 (Hoy)**: El punto de inicio del gráfico coincide exactamente con tu **Patrimonio Neto** actual (Cuentas + Por Cobrar - Deudas).
-2.  **Transparencia**: Si pasas el ratón sobre el ícono de Información (i) junto al Patrimonio Neto en el encabezado, verás el desglose de cuánto de tu riqueza está en efectivo, cuánto es deuda y cuánto te deben.
-3.  **Saldos por Liquidar**: En la barra lateral verás tus deudas y cobros pendientes. El gráfico asume que esos saldos se mantienen "vivos" a menos que tú simules su pago o cobro.
+> **💡 El "Peligro"**: Puedes tener un patrimonio altísimo (porque te deben mucha plata en marzo), pero tener **liquidez negativa** hoy (porque no tienes efectivo para pagar la luz). El Validador te ayuda a ver cuándo podrías quedarte sin caja.
 
-### 🛠️ Cómo sacarle provecho
-- **Simular una Compra**: Si quieres ver cómo te afecta comprar un auto en el Mes 12, agrega un escenario de tipo "Compra". Verás el "bajón" inmediato en la línea roja.
-- **Simular un Aumento**: Agrega un "Nuevo Ingreso" permanente para ver cómo se acelera tu crecimiento patrimonial en el tiempo.
-- **Deudas/Cuotas**: Si tienes un crédito que termina en 6 meses, agrégalo en la sección de "Cuotas". Verás que en el Mes 7, tu proyección empieza a subir más rápido porque ya no tienes ese gasto fijo.
+### 💰 Cómo validar un pago o cobro
+En la barra lateral ("Saldos por Liquidar"), verás tus deudas y cobros pendientes. 
+1.  **Pulsar "Planear"**: Al hacerlo sobre un cobro pendiente (ej. "Antena"), podrás elegir en qué mes esperas recibir ese dinero.
+2.  **Efecto en el Gráfico**: Verás que en ese mes exacto, tu **Línea de Liquidez (Verde)** sube, pero tu **Línea de Patrimonio (Azul)** no cambia (porque ese dinero ya era técnicamente tuyo desde el principio).
+3.  **Resultado**: Si la línea verde baja de cero antes de que ocurra ese cobro, significa que tu plan de gastos actual no es viable y debes ajustar tus egresos.
 
 ---
 

@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { formatCurrency } from '../utils/formatters';
-import { TrendingUp, RefreshCcw, Landmark, ShoppingBag, Plus, Trash2, ChevronRight, Info, CreditCard, Wallet } from 'lucide-react';
+import { TrendingUp, RefreshCcw, Landmark, ShoppingBag, Plus, Trash2, ChevronRight, Info, CreditCard, Wallet, ArrowRightLeft } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Account, Transaction, Category } from '../types';
+import type { Account, Transaction, Category, AccountType } from '../types';
 
 interface SimulationScenario {
     id: string;
@@ -91,7 +91,13 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
     // 2. Projection Engine
     const projectionData = useMemo(() => {
         const totalMonths = horizon === '3y' ? 36 : 120;
+
+        // Initial values
         const currentEquity = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+        const liquidTypes: AccountType[] = ['Checking', 'Savings', 'Vista', 'Cash'];
+        const currentCash = accounts
+            .filter(a => liquidTypes.includes(a.type))
+            .reduce((sum, acc) => sum + Number(acc.balance), 0);
 
         // Calculate Core Fixed Expenses
         const totalCurrentInstallmentPayment = installments.reduce((sum, i) => sum + i.amount, 0);
@@ -99,15 +105,19 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
 
         let data: any[] = [];
         let runningWealth = currentEquity;
+        let runningCash = currentCash;
+
         let simulatedWealth = currentEquity;
+        let simulatedCash = currentCash;
 
         // --- Mes 0: Hoy ---
         data.push({
             index: 0,
             label: 'Hoy',
             Patrimonio: Math.round(runningWealth),
+            Liquidez: Math.round(runningCash),
             Simulado: Math.round(simulatedWealth),
-            Diferencia: 0
+            Simulado_Liquidez: Math.round(simulatedCash)
         });
 
         for (let m = 1; m <= totalMonths; m++) {
@@ -119,21 +129,36 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
             const monthlyExpenses = monthlyFixed + baseStats.variable;
             const monthlyNet = baseStats.income - monthlyExpenses;
 
+            // Wealth includes growth/loss from income - all expenses
             runningWealth += monthlyNet;
+            // Cash also changes by the same net for the base case
+            runningCash += monthlyNet;
 
             // --- Simulated Scenario ---
             let simIncome = baseStats.income;
             let simExpenses = monthlyExpenses;
-            let simOneTime = 0;
+            let simWealthImpact = 0; // Immediate wealth changes (one-time buy/sell)
+            let simCashImpact = 0;   // Immediate cash changes (receivable collected or debt paid)
 
             scenarios.forEach(s => {
                 const isActive = m >= s.startMonth && (s.duration === 0 || m < s.startMonth + (s.duration || 0));
 
                 if (isActive) {
                     if (s.type === 'purchase') {
-                        if (m === s.startMonth) simOneTime += s.amount;
+                        if (m === s.startMonth) {
+                            simWealthImpact -= s.amount;
+                            simCashImpact -= s.amount;
+                        }
                     } else if (s.type === 'income_change') {
-                        simIncome += s.amount;
+                        // If it's a liquidation (receiving money we already have as 'Receivable')
+                        if (s.name.includes('Liquidar:')) {
+                            if (m === s.startMonth) {
+                                // Wealth doesn't change (asset changed form), but cash does
+                                simCashImpact += s.amount;
+                            }
+                        } else {
+                            simIncome += s.amount;
+                        }
                     } else if (s.type === 'extra_savings') {
                         simExpenses -= s.amount;
                     }
@@ -141,15 +166,17 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
             });
 
             const simNet = simIncome - simExpenses;
-            simulatedWealth += simNet - simOneTime;
+            simulatedWealth += simNet + simWealthImpact;
+            simulatedCash += simNet + simCashImpact;
 
             if (horizon === '3y' || (horizon === '10y' && m % 12 === 0)) {
                 data.push({
                     index: m,
                     label: horizon === '3y' ? `Mes ${m}` : `Año ${m / 12}`,
                     Patrimonio: Math.round(runningWealth),
+                    Liquidez: Math.round(runningCash),
                     Simulado: Math.round(simulatedWealth),
-                    Diferencia: Math.round(simulatedWealth - runningWealth)
+                    Simulado_Liquidez: Math.round(simulatedCash)
                 });
             }
         }
@@ -220,10 +247,52 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
             <div className="flex-1 flex overflow-hidden">
                 {/* Simulator Sidebar */}
                 <aside className="hidden lg:flex w-80 flex-col bg-white/20 dark:bg-transparent border-r border-slate-100 dark:border-white/5 overflow-hidden">
-                    {/* Section 1: Scenarios */}
+                    {/* Section 1: Current Balances to Liquidate (PENDING ITEMS) */}
+                    <div className="flex-1 flex flex-col overflow-hidden min-h-0 border-b border-slate-100 dark:border-white/5">
+                        <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Saldos por Liquidar (Validación)</h3>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+                            {accounts.filter(a => a.type === 'Receivable' || a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine').map(a => {
+                                const isDebt = a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine';
+                                const balance = Math.abs(Number(a.balance));
+                                return (
+                                    <div key={a.id} className="bg-white dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-50 dark:border-white/5 group relative">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <div className="flex items-center gap-2">
+                                                {isDebt ? <CreditCard size={12} className="text-rose-500" /> : <Wallet size={12} className="text-emerald-500" />}
+                                                <span className="text-[9px] font-black text-slate-400 uppercase">{isDebt ? 'Deuda' : 'Por Cobrar'}</span>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    setNewSim({
+                                                        name: `Liquidar: ${a.name}`,
+                                                        type: isDebt ? 'purchase' : 'income_change',
+                                                        amount: balance,
+                                                        startMonth: 1
+                                                    });
+                                                    setShowSimModal(true);
+                                                }}
+                                                className="p-1 px-2 bg-blue-500/10 text-blue-600 rounded-lg text-[8px] font-black uppercase opacity-0 group-hover:opacity-100 transition-all"
+                                                title="Planificar Cobro/Pago"
+                                            >
+                                                Planear
+                                            </button>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-black text-slate-800 dark:text-white truncate max-w-[120px]">{a.name}</span>
+                                            <span className={`text-[10px] font-black ${isDebt ? 'text-rose-500' : 'text-emerald-500'}`}>{formatCurrency(balance)}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Section 2: Simulations (MODIFIED PLANS) */}
                     <div className="flex-1 flex flex-col overflow-hidden min-h-0 border-b border-slate-100 dark:border-white/5">
                         <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Simulaciones</h3>
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Planes de Validación</h3>
                             <button onClick={() => setShowSimModal(true)} className="w-6 h-6 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:scale-110 transition-all"><Plus size={14} strokeWidth={3} /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
@@ -231,7 +300,7 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                                 <div key={s.id} className="bg-white dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-50 dark:border-white/5 group relative">
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex flex-col">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase mb-0.5">{s.type === 'purchase' ? 'Compra' : s.type === 'income_change' ? 'Ingreso' : 'Ahorro'}</span>
+                                            <span className="text-[9px] font-black text-slate-400 uppercase mb-0.5">{s.type === 'purchase' ? 'Gasto Planificado' : s.type === 'income_change' ? 'Ingreso Planificado' : 'Ahorro Extra'}</span>
                                             <span className="text-xs font-black text-slate-800 dark:text-white">{s.name}</span>
                                         </div>
                                         <button onClick={() => setScenarios(scenarios.filter(sc => sc.id !== s.id))} className="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 absolute top-3 right-3"><Trash2 size={12} /></button>
@@ -242,43 +311,14 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                                     </div>
                                 </div>
                             ))}
-                            {scenarios.length === 0 && <p className="text-[9px] font-bold text-slate-300 uppercase text-center py-4">Sin simulaciones activas</p>}
+                            {scenarios.length === 0 && <p className="text-[9px] font-bold text-slate-300 uppercase text-center py-4">Sin planes de validación</p>}
                         </div>
                     </div>
 
-                    {/* Section 2: Current Balances to Liquidate */}
-                    <div className="flex-1 flex flex-col overflow-hidden min-h-0 border-b border-slate-100 dark:border-white/5">
-                        <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Saldos por Liquidar</h3>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
-                            {accounts.filter(a => a.type === 'Receivable' || a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine').map(a => {
-                                const isDebt = a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine';
-                                return (
-                                    <div key={a.id} className="bg-white dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-50 dark:border-white/5">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <div className="flex items-center gap-2">
-                                                {isDebt ? <CreditCard size={12} className="text-rose-500" /> : <Wallet size={12} className="text-emerald-500" />}
-                                                <span className="text-[9px] font-black text-slate-400 uppercase">{isDebt ? 'Deuda' : 'Por Cobrar'}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs font-black text-slate-800 dark:text-white truncate max-w-[120px]">{a.name}</span>
-                                            <span className={`text-[10px] font-black ${isDebt ? 'text-rose-500' : 'text-emerald-500'}`}>{formatCurrency(Math.abs(Number(a.balance)))}</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {accounts.filter(a => a.type === 'Receivable' || a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine').length === 0 &&
-                                <p className="text-[9px] font-bold text-slate-300 uppercase text-center py-4">Sin saldos pendientes</p>
-                            }
-                        </div>
-                    </div>
-
-                    {/* Section 3: Installments */}
+                    {/* Section 3: Fixed Debts / Installments */}
                     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                         <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Deudas / Cuotas</h3>
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Deudas Fijas / Cuotas</h3>
                             <button onClick={() => setShowInstallmentModal(true)} className="w-6 h-6 bg-rose-500 text-white rounded-lg flex items-center justify-center hover:scale-110 transition-all"><Plus size={14} strokeWidth={3} /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
@@ -297,38 +337,46 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                                     </div>
                                 </div>
                             ))}
-                            {installments.length === 0 && <p className="text-[9px] font-bold text-slate-300 uppercase text-center py-4">Sin deudas registradas</p>}
+                            {installments.length === 0 && <p className="text-[9px] font-bold text-slate-300 uppercase text-center py-4">Sin cuotas registradas</p>}
                         </div>
                     </div>
                 </aside>
 
                 {/* Plot Area */}
                 <main className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scrollbar-hide">
-                    <div className="relative h-[450px] w-full bg-white dark:bg-slate-900/20 rounded-[2.5rem] p-8 border border-white dark:border-white/5 shadow-premium">
+                    <div className="relative h-[480px] w-full bg-white dark:bg-slate-900/20 rounded-[2.5rem] p-8 border border-white dark:border-white/5 shadow-premium">
                         <div className="flex justify-between items-center mb-10">
                             <div>
-                                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">Proyección Patrimonial</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Crecimiento Neto (Ingresos - Gastos)</p>
+                                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">Validador de Planes Patrimoniales</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Comparativa de Patrimonio vs. Liquidez (Efectivo)</p>
                             </div>
-                            <div className="flex items-center gap-6">
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Base (Real)</span>
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Patrimonio (Tengo)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Liquidez (Caja)</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"></div>
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Simulado</span>
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Plan (Simulado)</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="h-[320px] w-full">
+                        <div className="h-[340px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={projectionData}>
                                     <defs>
-                                        <linearGradient id="colorBase" x1="0" y1="0" x2="0" y2="1">
+                                        <linearGradient id="colorWealth" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
                                             <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorCash" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="colorSim" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1} />
@@ -338,9 +386,15 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                                     <CartesianGrid strokeDasharray="3 3" stroke="#00000005" vertical={false} />
                                     <XAxis dataKey="label" stroke="#94a3b8" fontSize={9} fontWeight={900} tickLine={false} axisLine={false} dy={10} />
                                     <YAxis stroke="#94a3b8" fontSize={9} fontWeight={900} tickLine={false} axisLine={false} tickFormatter={(val) => `$${(val / 1000000).toFixed(1)}M`} />
-                                    <Tooltip contentStyle={{ borderRadius: '24px', backgroundColor: '#fff', border: 'none', padding: '24px', boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.15)' }} itemStyle={{ fontSize: '12px', fontWeight: '900' }} formatter={(value: any) => formatCurrency(value)} />
-                                    <Area type="monotone" dataKey="Patrimonio" stroke="#2563eb" strokeWidth={4} fillOpacity={1} fill="url(#colorBase)" />
-                                    <Area type="monotone" dataKey="Simulado" stroke="#f43f5e" strokeWidth={4} fillOpacity={1} fill="url(#colorSim)" strokeDasharray="10 5" />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '24px', backgroundColor: '#fff', border: 'none', padding: '24px', boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.15)' }}
+                                        itemStyle={{ fontSize: '11px', fontWeight: '900' }}
+                                        formatter={(value: any, name?: string) => [formatCurrency(value), name || '']}
+                                    />
+                                    <Area type="monotone" dataKey="Patrimonio" name="Patrimonio Base" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorWealth)" />
+                                    <Area type="monotone" dataKey="Liquidez" name="Liquidez Base" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorCash)" />
+                                    <Area type="monotone" dataKey="Simulado" name="Patrimonio Plan" stroke="#2563eb" strokeWidth={3} fillOpacity={0} strokeDasharray="5 5" />
+                                    <Area type="monotone" dataKey="Simulado_Liquidez" name="Liquidez Plan" stroke="#f43f5e" strokeWidth={4} fillOpacity={1} fill="url(#colorSim)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -350,11 +404,11 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {projectionData.filter((_, i) => i === projectionData.length - 1 || i === Math.floor(projectionData.length / 2) || i === 0).map((point, idx) => (
                             <div key={idx} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-sm">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Patrimonio en {point.label}</span>
-                                <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter mb-2">{formatCurrency(point.Simulado)}</div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Liquidez en {point.label}</span>
+                                <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter mb-2">{formatCurrency(point.Simulado_Liquidez)}</div>
                                 <div className="flex items-center gap-2">
-                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${point.Simulado >= point.Patrimonio ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                                        {point.Simulado >= point.Patrimonio ? '+' : '-'} {formatCurrency(Math.abs(point.Simulado - point.Patrimonio))}
+                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${point.Simulado_Liquidez >= point.Liquidez ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                        {point.Simulado_Liquidez >= point.Liquidez ? '+' : '-'} {formatCurrency(Math.abs(point.Simulado_Liquidez - point.Liquidez))}
                                     </span>
                                     <span className="text-[10px] font-bold text-slate-400">vs. Base</span>
                                 </div>

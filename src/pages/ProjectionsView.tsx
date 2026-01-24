@@ -93,23 +93,24 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
         const totalMonths = horizon === '3y' ? 36 : 120;
         const currentEquity = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
+        // Calculate Core Fixed Expenses
+        const totalCurrentInstallmentPayment = installments.reduce((sum, i) => sum + i.amount, 0);
+        const coreFixedBase = Math.max(0, baseStats.fixed - totalCurrentInstallmentPayment);
+
         let data: any[] = [];
         let runningWealth = currentEquity;
         let simulatedWealth = currentEquity;
 
-        // Calculate Core Fixed Expenses (Historical Average - Current Installments)
-        // Assumption: The historical average 'fixed' includes the payments for these installments.
-        // So we strip them out to find the "Debt-Free Baseline".
-        const totalCurrentInstallmentPayment = installments.reduce((sum, i) => sum + i.amount, 0);
-
-        // Safety check: ensure core fixed expenses doesn't go below zero if user enters crazy data
-        const coreFixedBase = Math.max(0, baseStats.fixed - totalCurrentInstallmentPayment);
+        // --- Mes 0: Hoy ---
+        data.push({
+            index: 0,
+            label: 'Hoy',
+            Patrimonio: Math.round(runningWealth),
+            Simulado: Math.round(simulatedWealth),
+            Diferencia: 0
+        });
 
         for (let m = 1; m <= totalMonths; m++) {
-            // --- Base Scenario (Projected as 'Status Quo' but effectively optimized) ---
-            // Actually, 'Base' usually means "If I do nothing". 
-            // If I do nothing, my installments eventually end. So the Base line SHOULD reflect installments dropping off.
-
             const activeInstallmentsAmount = installments
                 .filter(i => m <= i.remainingMonths)
                 .reduce((sum, i) => sum + i.amount, 0);
@@ -120,9 +121,9 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
 
             runningWealth += monthlyNet;
 
-            // --- Simulated Scenario (Events + Changes) ---
+            // --- Simulated Scenario ---
             let simIncome = baseStats.income;
-            let simExpenses = monthlyExpenses; // Start with the logic above (Core + Installments)
+            let simExpenses = monthlyExpenses;
             let simOneTime = 0;
 
             scenarios.forEach(s => {
@@ -134,8 +135,6 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                     } else if (s.type === 'income_change') {
                         simIncome += s.amount;
                     } else if (s.type === 'extra_savings') {
-                        // 'Extra Savings' in this context means 'Spending Less' or 'Investing More'?
-                        // Let's assume it means 'Positive Cashflow Adjustment' (e.g. cutting costs)
                         simExpenses -= s.amount;
                     }
                 }
@@ -176,7 +175,7 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
             {/* Simple Header */}
             <div className="px-8 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/40 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 shrink-0">
                 <div>
-                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Flujo de Caja Mensual</h2>
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Flujo de Caja Mensual Corriente</h2>
                     <div className="flex items-center gap-6">
                         <div className="flex flex-col">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Ingresos</span>
@@ -187,10 +186,27 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                             <span className="text-sm font-black text-rose-500 tracking-tight">{formatCurrency(baseStats.expenses)}</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Neto</span>
-                            <span className={`text-sm font-black tracking-tight ${baseStats.income - baseStats.expenses >= 0 ? 'text-blue-500' : 'text-rose-500'}`}>
-                                {formatCurrency(baseStats.income - baseStats.expenses)}
-                            </span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Patrimonio Neto Hoy</span>
+                            <div className="flex items-center gap-1.5 group cursor-help">
+                                <span className={`text-sm font-black tracking-tight text-blue-500`}>
+                                    {formatCurrency(accounts.reduce((sum, acc) => sum + Number(acc.balance), 0))}
+                                </span>
+                                <Info size={12} className="text-slate-300" />
+                                <div className="absolute top-20 left-8 bg-slate-900 text-white p-3 rounded-2xl text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-2xl pointer-events-none">
+                                    <div className="flex justify-between gap-4 mb-1">
+                                        <span className="text-slate-400">Cuentas:</span>
+                                        <span>{formatCurrency(accounts.filter(a => a.type !== 'Receivable' && a.type !== 'Payable' && a.type !== 'Credit' && a.type !== 'CreditLine').reduce((s, a) => s + Number(a.balance), 0))}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4 mb-1">
+                                        <span className="text-emerald-400">Por Cobrar:</span>
+                                        <span>{formatCurrency(accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0))}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4">
+                                        <span className="text-rose-400">Deudas:</span>
+                                        <span>{formatCurrency(accounts.filter(a => a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine').reduce((s, a) => s + Number(a.balance), 0))}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -230,7 +246,36 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                         </div>
                     </div>
 
-                    {/* Section 2: Installments */}
+                    {/* Section 2: Current Balances to Liquidate */}
+                    <div className="flex-1 flex flex-col overflow-hidden min-h-0 border-b border-slate-100 dark:border-white/5">
+                        <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Saldos por Liquidar</h3>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+                            {accounts.filter(a => a.type === 'Receivable' || a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine').map(a => {
+                                const isDebt = a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine';
+                                return (
+                                    <div key={a.id} className="bg-white dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-50 dark:border-white/5">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <div className="flex items-center gap-2">
+                                                {isDebt ? <CreditCard size={12} className="text-rose-500" /> : <Wallet size={12} className="text-emerald-500" />}
+                                                <span className="text-[9px] font-black text-slate-400 uppercase">{isDebt ? 'Deuda' : 'Por Cobrar'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-black text-slate-800 dark:text-white truncate max-w-[120px]">{a.name}</span>
+                                            <span className={`text-[10px] font-black ${isDebt ? 'text-rose-500' : 'text-emerald-500'}`}>{formatCurrency(Math.abs(Number(a.balance)))}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {accounts.filter(a => a.type === 'Receivable' || a.type === 'Payable' || a.type === 'Credit' || a.type === 'CreditLine').length === 0 &&
+                                <p className="text-[9px] font-bold text-slate-300 uppercase text-center py-4">Sin saldos pendientes</p>
+                            }
+                        </div>
+                    </div>
+
+                    {/* Section 3: Installments */}
                     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                         <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Deudas / Cuotas</h3>

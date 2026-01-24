@@ -91,4 +91,25 @@ Si una cuenta marca **"DESCUADRADA"**:
 
 ---
 
+## 6. Simulaciones Patrimoniales (Proyecciones)
+Esta sección de la App no es un oráculo, sino un **Laboratorio Financiero** donde puedes jugar a "Qué pasaría si...".
+
+### 🤔 ¿Por qué se llama "Simulación"?
+Se llama así porque crea un modelo matemático basado en tu comportamiento real para proyectar el futuro. 
+- **Línea Base (Azul)**: Es tu futuro si no haces nada distinto a los últimos 6 meses.
+- **Línea Simulada (Roja)**: Es como cambiaría tu riqueza si ocurrieran eventos específicos que tú definas.
+
+### 💰 ¿Dónde están mis deudas y la plata por cobrar?
+El simulador **YA LOS INCLUYE** desde el primer punto del gráfico:
+1.  **Mes 0 (Hoy)**: El punto de inicio del gráfico coincide exactamente con tu **Patrimonio Neto** actual (Cuentas + Por Cobrar - Deudas).
+2.  **Transparencia**: Si pasas el ratón sobre el ícono de Información (i) junto al Patrimonio Neto en el encabezado, verás el desglose de cuánto de tu riqueza está en efectivo, cuánto es deuda y cuánto te deben.
+3.  **Saldos por Liquidar**: En la barra lateral verás tus deudas y cobros pendientes. El gráfico asume que esos saldos se mantienen "vivos" a menos que tú simules su pago o cobro.
+
+### 🛠️ Cómo sacarle provecho
+- **Simular una Compra**: Si quieres ver cómo te afecta comprar un auto en el Mes 12, agrega un escenario de tipo "Compra". Verás el "bajón" inmediato en la línea roja.
+- **Simular un Aumento**: Agrega un "Nuevo Ingreso" permanente para ver cómo se acelera tu crecimiento patrimonial en el tiempo.
+- **Deudas/Cuotas**: Si tienes un crédito que termina en 6 meses, agrégalo en la sección de "Cuotas". Verás que en el Mes 7, tu proyección empieza a subir más rápido porque ya no tienes ese gasto fijo.
+
+---
+
 *Este manual se actualiza periódicamente con las últimas mejoras de Guapacha Intelligence.*

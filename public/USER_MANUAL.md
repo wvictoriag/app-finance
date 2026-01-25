@@ -58,12 +58,12 @@ Existen tres tipos de movimientos fundamentales:
 3.  **Transferencia (Azul)**: Movimiento entre tus propias cuentas o cobro de deudas.
     - **Categorización**: ¡Ahora puedes categorizar las transferencias! Si marcas un cobro de deuda como categoría "Ingreso", aparecerá en tus estadísticas de flujo de caja.
 
-### Caso Práctico: Caso "Frank"
-Para gestionar una deuda que Frank tiene contigo de $28.000:
-1.  **Inicio**: Crea la cuenta "Frank" (CxC) con Saldo Inicial y Actual de $28.000.
-2.  **El Pago**: Registra una **Transferencia** desde "Frank" hacia tu "Cuenta Corriente" por $28.000.
+### Caso Práctico: Préstamos a Terceros
+Para gestionar una deuda que una **Persona A** tiene contigo de $28.000:
+1.  **Inicio**: Crea la cuenta "Persona A" (CxC) con Saldo Inicial y Actual de $28.000.
+2.  **El Pago**: Registra una **Transferencia** desde "Persona A" hacia tu "Cuenta Corriente" por $28.000.
 3.  **Resultado Contextual**: 
-    - Al filtrar por **Frank**, verás un egreso (la deuda desaparece).
+    - Al filtrar por **Persona A**, verás un egreso (la deuda desaparece).
     - Al filtrar por **Cuenta Corriente**, verás un ingreso de dinero real.
 
 ---
@@ -99,11 +99,12 @@ A diferencia de otras apps, aquí distinguimos entre dos realidades:
 - **Patrimonio (Línea Azul)**: Representa todo lo que posees (dinero, bienes, cuentas por cobrar) menos tus deudas. Es tu "riqueza teórica".
 - **Liquidez (Línea Verde)**: Representa el **dinero real en tu bolsillo/banco** hoy. 
 
-> **💡 El "Peligro"**: Puedes tener un patrimonio altísimo (porque te deben mucha plata en marzo), pero tener **liquidez negativa** hoy (porque no tienes efectivo para pagar la luz). El Validador te ayuda a ver cuándo podrías quedarte sin caja.
+> [!TIP]
+> **El "Peligro"**: Puedes tener un patrimonio altísimo (porque te deben mucha plata), pero tener **liquidez negativa** hoy. El Validador te ayuda a ver cuándo podrías quedarte sin caja.
 
 ### 💰 Cómo validar un pago o cobro
 En la barra lateral ("Saldos por Liquidar"), verás tus deudas y cobros pendientes. 
-1.  **Pulsar "Planear"**: Al hacerlo sobre un cobro pendiente (ej. "Antena"), podrás elegir en qué mes esperas recibir ese dinero.
+1.  **Pulsar "Planear"**: Al hacerlo sobre un cobro pendiente (ej. "Cliente X"), podrás elegir en qué mes esperas recibir ese dinero.
 2.  **Efecto en el Gráfico**: Verás que en ese mes exacto, tu **Línea de Liquidez (Verde)** sube, pero tu **Línea de Patrimonio (Azul)** no cambia (porque ese dinero ya era técnicamente tuyo desde el principio).
 3.  **Resultado**: Si la línea verde baja de cero antes de que ocurra ese cobro, significa que tu plan de gastos actual no es viable y debes ajustar tus egresos.
 

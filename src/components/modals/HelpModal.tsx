@@ -106,10 +106,12 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                     // Alerts (GFM style)
                                     if (trimmed.startsWith('> ')) {
                                         const cleanText = trimmed.replace('> ', '').trim();
-                                        if (!cleanText) return null; // Prevent empty red boxes
+                                        if (!cleanText) return null; // Avoid empty boxes for raw blockquotes
 
                                         const isImportant = cleanText.includes('[!IMPORTANT]') || cleanText.includes('[!WARNING]') || cleanText.includes('[!CAUTION]');
                                         const labelRemoved = cleanText.replace(/\[!(.*?)\]/g, '').trim();
+
+                                        if (!labelRemoved) return null; // CRITICAL: Stop empty red boxes if the line only had [!TAG]
 
                                         return (
                                             <div key={idx} className={`my-4 p-5 rounded-[1.5rem] border flex gap-4 items-start ${isImportant ? 'bg-rose-500/5 border-rose-500/10 text-rose-600' :

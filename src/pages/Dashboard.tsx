@@ -217,7 +217,7 @@ function DashboardContent() {
                                     'bg-amber-500 animate-pulse'
                                 }`} />
                         </div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v2.0</span></p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v2.1 Canary</span></p>
                     </div>
 
                     <div className="flex items-center gap-4 lg:gap-12 overflow-visible relative">

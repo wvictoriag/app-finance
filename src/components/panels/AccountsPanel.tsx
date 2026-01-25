@@ -50,7 +50,7 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
     }, 0);
 
     return (
-        <div className="h-full flex flex-col overflow-y-auto overflow-x-visible p-2 lg:p-4 scrollbar-hide">
+        <div className="h-full flex flex-col overflow-hidden p-2 lg:p-4">
             <div className="flex justify-between items-center mb-4 px-1">
                 <h2 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Cuentas</h2>
                 <button
@@ -235,41 +235,15 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
                 )}
             </div>
 
-            <div className="bg-slate-100 dark:bg-slate-900/60 p-3 md:p-4 rounded-3xl mt-2 relative group/total shrink-0">
+            <div
+                className="bg-slate-100 dark:bg-slate-900/60 p-3 md:p-4 rounded-3xl mt-2 relative overflow-hidden group/total shrink-0 cursor-pointer hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
+                onClick={() => (window as any).dispatchOpenBreakdown?.()}
+            >
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 rounded-full bg-accent-primary/5 blur-2xl transition-all"></div>
 
-                <div className="flex items-center gap-2 mb-1 relative z-10 group/tooltip cursor-help">
+                <div className="flex items-center gap-2 mb-1 relative z-10">
                     <span className="text-[9px] md:text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Total Patrimonio</span>
-                    <Info size={12} className="text-blue-600 animate-pulse group-hover/tooltip:animate-none" />
-
-                    {/* Breakdown Tooltip (Mobile Optimized) */}
-                    <div className="absolute bottom-full mb-3 left-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-slate-100 dark:border-white/10 p-4 rounded-2xl shadow-2xl opacity-0 group-hover/tooltip:opacity-100 translate-y-2 group-hover/tooltip:translate-y-0 transition-all pointer-events-none z-[80] min-w-[240px]">
-                        <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pb-2 border-b border-slate-50 dark:border-white/5">Desglose de Patrimonio</h4>
-                        <div className="space-y-2">
-                            <div className="flex justify-between gap-6">
-                                <span className="text-[10px] font-bold text-slate-500">Cajas y Cuentas</span>
-                                <span className="text-[10px] font-black text-slate-900 dark:text-white">
-                                    {formatCurrency(accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0))}
-                                </span>
-                            </div>
-                            <div className="flex justify-between gap-6">
-                                <span className="text-[10px] font-bold text-emerald-500">Por Cobrar (Activos)</span>
-                                <span className="text-[10px] font-black text-emerald-600">
-                                    {formatCurrency(accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0))}
-                                </span>
-                            </div>
-                            <div className="flex justify-between gap-6">
-                                <span className="text-[10px] font-bold text-rose-500">Deudas (Pasivos)</span>
-                                <span className="text-[10px] font-black text-rose-600">
-                                    {formatCurrency(accounts.filter(a => ['Payable', 'Credit', 'CreditLine'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0))}
-                                </span>
-                            </div>
-                            <div className="pt-2 mt-2 border-t border-slate-50 dark:border-white/5 flex justify-between">
-                                <span className="text-[10px] font-black text-slate-900 dark:text-white">Total Patrimonio</span>
-                                <span className="text-[10px] font-black text-blue-600">{formatCurrency(totalEquity)}</span>
-                            </div>
-                        </div>
-                    </div>
+                    <Info size={12} className="text-blue-600" />
                 </div>
 
                 <div className="text-xl md:text-2xl lg:text-3xl font-black tracking-tighter relative z-10 text-slate-900 dark:text-white leading-none">

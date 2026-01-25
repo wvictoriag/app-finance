@@ -35,6 +35,7 @@ const TransactionModal = lazy(() => import('../components/modals/TransactionModa
 const AccountModal = lazy(() => import('../components/modals/AccountModal').then(m => ({ default: m.AccountModal })));
 const CategoryModal = lazy(() => import('../components/modals/CategoryModal').then(m => ({ default: m.CategoryModal })));
 const ReconcileModal = lazy(() => import('../components/modals/ReconcileModal').then(m => ({ default: m.ReconcileModal })));
+const { BreakdownModal } = lazy(() => import('../components/modals/BreakdownModal').then(m => ({ default: m.BreakdownModal }))) as any;
 
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -87,6 +88,13 @@ function DashboardContent() {
     const [showReconcileModal, setShowReconcileModal] = useState(false);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [reconcilingAccount, setReconcilingAccount] = useState<Account | null>(null);
+    const [showBreakdownModal, setShowBreakdownModal] = useState(false);
+
+    // Global dispatch for Breakdown Modal
+    useEffect(() => {
+        (window as any).dispatchOpenBreakdown = () => setShowBreakdownModal(true);
+        return () => { delete (window as any).dispatchOpenBreakdown; };
+    }, []);
 
     // Keyboard Shortcuts
     const shortcuts = useMemo(() => ({
@@ -225,8 +233,8 @@ function DashboardContent() {
                 </div>
             </nav>
 
-            <div className="flex-1 flex flex-col overflow-visible pb-20 lg:pb-0 relative">
-                <header className="flex flex-col lg:flex-row lg:items-center justify-between px-4 lg:px-10 py-4 lg:py-8 bg-white/50 dark:bg-transparent border-b border-slate-100 dark:border-white/5 gap-4 sticky top-0 z-[70] backdrop-blur-md">
+            <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
+                <header className="flex flex-col lg:flex-row lg:items-center justify-between px-4 lg:px-10 py-4 lg:py-8 bg-white/50 dark:bg-transparent border-b border-slate-100 dark:border-white/5 gap-4">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3">
                             <h1 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tighter truncate max-w-[200px] md:max-w-none">
@@ -243,39 +251,13 @@ function DashboardContent() {
 
                     <div className="flex items-center gap-4 lg:gap-12 overflow-visible relative">
                         <div className="flex items-center gap-4 lg:gap-12 overflow-visible pb-2 lg:pb-0 scrollbar-hide">
-                            <div className="flex flex-col shrink-0 relative">
-                                <div className="flex items-center gap-1.5 group cursor-help relative mb-0.5">
-                                    <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Patrimonio Neto</span>
-                                    <Info size={16} className="text-blue-600 animate-bounce group-hover:animate-none" />
-
-                                    {/* Breakdown Tooltip */}
-                                    <div className="absolute top-full mt-2 left-0 sm:left-auto sm:right-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-slate-100 dark:border-white/10 p-4 rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all pointer-events-none z-[80] min-w-[220px]">
-                                        <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pb-2 border-b border-slate-50 dark:border-white/5">Desglose de Patrimonio</h4>
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between gap-6">
-                                                <span className="text-[10px] font-bold text-slate-500">Cuentas (Líquido)</span>
-                                                <span className="text-[10px] font-black text-slate-900 dark:text-white">
-                                                    {formatCurrency(accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0))}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between gap-6">
-                                                <span className="text-[10px] font-bold text-emerald-500">Por Cobrar</span>
-                                                <span className="text-[10px] font-black text-emerald-600">
-                                                    {formatCurrency(accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0))}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between gap-6">
-                                                <span className="text-[10px] font-bold text-rose-500">Deudas</span>
-                                                <span className="text-[10px] font-black text-rose-600">
-                                                    {formatCurrency(accounts.filter(a => ['Payable', 'Credit', 'CreditLine'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0))}
-                                                </span>
-                                            </div>
-                                            <div className="pt-2 mt-2 border-t border-slate-50 dark:border-white/5 flex justify-between">
-                                                <span className="text-[10px] font-black text-slate-900 dark:text-white">Total Patrimonio</span>
-                                                <span className="text-[10px] font-black text-blue-600">{formatCurrency(netWorth)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div className="flex flex-col shrink-0">
+                                <div
+                                    className="flex items-center gap-1.5 group cursor-pointer relative mb-0.5 hover:text-blue-500 transition-colors"
+                                    onClick={() => setShowBreakdownModal(true)}
+                                >
+                                    <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-blue-500">Patrimonio Neto</span>
+                                    <Info size={14} className="text-blue-600" />
                                 </div>
                                 <span className="text-base md:text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tighter">
                                     {formatCurrency(netWorth)}
@@ -320,7 +302,7 @@ function DashboardContent() {
                                 className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden gap-0"
                             >
                                 {/* Column 1: Accounts */}
-                                <div className="lg:col-span-3 flex flex-col overflow-visible border-r border-slate-100 dark:border-white/5 relative z-20">
+                                <div className="lg:col-span-3 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5">
                                     <AccountsPanel
                                         onAddAccount={handleAddAccount}
                                         onEditAccount={handleEditAccount}
@@ -329,12 +311,12 @@ function DashboardContent() {
                                 </div>
 
                                 {/* Column 2: Monthly Control */}
-                                <div className="lg:col-span-4 flex flex-col overflow-visible border-r border-slate-100 dark:border-white/5">
+                                <div className="lg:col-span-4 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5">
                                     <MonthlyControl />
                                 </div>
 
                                 {/* Column 3: Transactions */}
-                                <div className="lg:col-span-5 flex flex-col overflow-visible">
+                                <div className="lg:col-span-5 flex flex-col overflow-hidden">
                                     <TransactionsPanel
                                         onEdit={(tx: Transaction) => {
                                             setEditingTransaction(tx);
@@ -460,6 +442,21 @@ function DashboardContent() {
                         isOpen={showReconcileModal}
                         onClose={handleCloseReconcileModal}
                         account={reconcilingAccount}
+                    />
+                </Suspense>
+            </ErrorBoundary>
+            {/* Breakdown Modal */}
+            <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner />}>
+                    <BreakdownModal
+                        isOpen={showBreakdownModal}
+                        onClose={() => setShowBreakdownModal(false)}
+                        data={{
+                            liquid: accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
+                            receivable: accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0),
+                            debt: accounts.filter(a => ['Payable', 'Credit', 'CreditLine'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
+                            total: netWorth
+                        }}
                     />
                 </Suspense>
             </ErrorBoundary>

@@ -44,15 +44,6 @@ interface SimulationModalProps {
 function SimulationModal({ initialData, onClose, onSave }: SimulationModalProps) {
     const [data, setData] = useState<Partial<SimulationScenario>>(initialData);
 
-    // Force sync if props change while open
-    React.useEffect(() => {
-        console.log('SimulationModal: Syncing data from props:', initialData);
-        setData(initialData);
-    }, [initialData]);
-
-    console.log('SimulationModal: Rendering. Current code version: 3.1');
-    console.log('SimulationModal: Field data:', data);
-
     return (
         <AnimatePresence>
             <motion.div
@@ -71,7 +62,6 @@ function SimulationModal({ initialData, onClose, onSave }: SimulationModalProps)
                 >
                     <div className="flex justify-between items-start mb-2">
                         <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tighter">Nuevo Escenario</h3>
-                        <span className="text-[8px] font-bold text-slate-300">v3.1</span>
                     </div>
                     <p className="text-xs text-slate-400 mb-8 font-medium">Define un cambio futuro (compra grande o cambio de sueldo).</p>
 

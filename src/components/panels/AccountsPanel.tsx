@@ -4,7 +4,7 @@ import { useModal } from '../../contexts/ModalContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import type { Account } from '../../types';
 import { Tooltip } from '../ui/Tooltip';
-import { CardSkeleton } from '../ui/Skeleton';
+import { AccountsPanelSkeleton } from '../ui/Skeleton';
 import { useRegion } from '../../contexts/RegionContext';
 import { useDashboard } from '../../contexts/DashboardContext';
 import { useDashboardUI } from '../../contexts/DashboardUIContext';
@@ -67,11 +67,7 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
 
             <div className="flex-1 overflow-y-auto space-y-2 pb-4 pr-1 scrollbar-hide">
                 {loadingAccs ? (
-                    <>
-                        <CardSkeleton />
-                        <CardSkeleton />
-                        <CardSkeleton />
-                    </>
+                    <AccountsPanelSkeleton />
                 ) : accounts.length === 0 ? (
                     <div className="p-8 text-center bg-slate-50 dark:bg-white/5 rounded-3xl border border-dashed border-slate-200 dark:border-white/10">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No hay cuentas</p>

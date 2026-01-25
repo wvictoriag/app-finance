@@ -7,7 +7,7 @@ interface SkeletonProps {
 export function Skeleton({ className = '' }: SkeletonProps) {
     return (
         <div
-            className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded ${className}`}
+            className={`animate-pulse bg-slate-200 dark:bg-white/10 rounded-md ${className}`}
             aria-hidden="true"
         />
     );
@@ -15,29 +15,53 @@ export function Skeleton({ className = '' }: SkeletonProps) {
 
 export function CardSkeleton() {
     return (
-        <div className="p-4 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+        <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl space-y-3">
             <div className="flex justify-between">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-12" />
+                <div className="flex gap-2">
+                    <Skeleton className="h-10 w-10 rounded-xl" />
+                    <div className="space-y-1">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                    </div>
+                </div>
+                <Skeleton className="h-6 w-16" />
             </div>
-            <Skeleton className="h-6 w-32" />
-            <div className="flex gap-2">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-3 w-16" />
-            </div>
+            <Skeleton className="h-3 w-20" />
         </div>
     );
 }
 
 export function ListItemSkeleton() {
     return (
-        <div className="flex items-center gap-4 p-3 font-medium">
-            <Skeleton className="w-1 h-6 rounded-full" />
-            <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
+        <div className="flex items-center justify-between py-3 border-b border-slate-50 dark:border-white/5">
+            <div className="flex items-center gap-3">
+                <Skeleton className="h-1.5 w-1.5 rounded-full" />
+                <div className="space-y-1">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-24" />
+                </div>
             </div>
-            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-5 w-20" />
+        </div>
+    );
+}
+
+export function AccountsPanelSkeleton() {
+    return (
+        <div className="space-y-2 p-2 overflow-hidden">
+            {[1, 2, 3, 4, 5].map((i) => (
+                <CardSkeleton key={i} />
+            ))}
+        </div>
+    );
+}
+
+export function TransactionsPanelSkeleton() {
+    return (
+        <div className="space-y-1 px-4 overflow-hidden">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <ListItemSkeleton key={i} />
+            ))}
         </div>
     );
 }

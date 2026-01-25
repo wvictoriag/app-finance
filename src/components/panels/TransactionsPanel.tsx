@@ -10,7 +10,7 @@ interface TransactionsPanelProps {
     onEdit: (transaction: Transaction) => void;
 }
 
-import { ListItemSkeleton } from '../ui/Skeleton';
+import { TransactionsPanelSkeleton } from '../ui/Skeleton';
 
 const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
     onEdit
@@ -237,15 +237,9 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-0.5 pr-1 scrollbar-hide px-4">
+            <div className="flex-1 overflow-y-auto pb-20 lg:pb-8 pr-1 scrollbar-hide">
                 {loadingRecent ? (
-                    <>
-                        <ListItemSkeleton />
-                        <ListItemSkeleton />
-                        <ListItemSkeleton />
-                        <ListItemSkeleton />
-                        <ListItemSkeleton />
-                    </>
+                    <TransactionsPanelSkeleton />
                 ) : transactions.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
                         <ArrowRightLeft className="w-8 h-8 text-slate-200 dark:text-slate-800 mb-4" />

@@ -6,7 +6,7 @@ import {
     LogOut, Pencil, Trash2, ArrowRightLeft, Scale,
     Moon, Sun, LayoutGrid, BarChart3, PieChart,
     Plus, Settings, User as UserIcon, Loader2,
-    RefreshCw, Wifi, WifiOff, CheckCircle2, AlertCircle, X, ExternalLink
+    RefreshCw, Wifi, WifiOff, CheckCircle2, AlertCircle, X, ExternalLink, Info
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { useAccounts } from '../hooks/useAccounts';
@@ -244,7 +244,39 @@ function DashboardContent() {
                     <div className="flex items-center gap-4 lg:gap-12 overflow-hidden">
                         <div className="flex items-center gap-4 lg:gap-12 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
                             <div className="flex flex-col shrink-0">
-                                <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Patrimonio Neto</span>
+                                <div className="flex items-center gap-1.5 group cursor-help relative mb-0.5">
+                                    <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Patrimonio Neto</span>
+                                    <Info size={16} className="text-blue-600 animate-bounce group-hover:animate-none" />
+
+                                    {/* Breakdown Tooltip */}
+                                    <div className="absolute top-full mt-2 left-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/10 p-4 rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all pointer-events-none z-[60] min-w-[220px]">
+                                        <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pb-2 border-b border-slate-50 dark:border-white/5">Desglose de Patrimonio</h4>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between gap-6">
+                                                <span className="text-[10px] font-bold text-slate-500">Cuentas (Líquido)</span>
+                                                <span className="text-[10px] font-black text-slate-900 dark:text-white">
+                                                    {formatCurrency(accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0))}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between gap-6">
+                                                <span className="text-[10px] font-bold text-emerald-500">Por Cobrar</span>
+                                                <span className="text-[10px] font-black text-emerald-600">
+                                                    {formatCurrency(accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0))}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between gap-6">
+                                                <span className="text-[10px] font-bold text-rose-500">Deudas</span>
+                                                <span className="text-[10px] font-black text-rose-600">
+                                                    {formatCurrency(accounts.filter(a => ['Payable', 'Credit', 'CreditLine'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0))}
+                                                </span>
+                                            </div>
+                                            <div className="pt-2 mt-2 border-t border-slate-50 dark:border-white/5 flex justify-between">
+                                                <span className="text-[10px] font-black text-slate-900 dark:text-white">Total Patrimonio</span>
+                                                <span className="text-[10px] font-black text-blue-600">{formatCurrency(netWorth)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <span className="text-base md:text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tighter">
                                     {formatCurrency(netWorth)}
                                 </span>
@@ -385,7 +417,7 @@ function DashboardContent() {
                         ) : null}
                     </AnimatePresence>
                 </main>
-            </div>
+            </div >
 
             {/* Transaction Modal */}
             <ErrorBoundary>

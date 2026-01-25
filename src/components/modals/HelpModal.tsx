@@ -73,42 +73,76 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                                 <span className="text-xs font-black uppercase tracking-widest">Cargando Manual...</span>
                             </div>
                         ) : (
-                            <div className="prose prose-slate dark:prose-invert max-w-none">
-                                {/* Simple Markdown interpretation (manually for better visual style) */}
-                                {content.split('---').map((section, idx) => (
-                                    <div key={idx} className="mb-12 last:mb-0">
-                                        {section.trim().split('\n').map((line, lIdx) => {
-                                            if (line.startsWith('# ')) return <h1 key={lIdx} className="text-4xl font-black text-slate-900 dark:text-white mb-8 tracking-tighter">{line.replace('# ', '')}</h1>;
-                                            if (line.startsWith('## ')) return <h2 key={lIdx} className="text-2xl font-black text-slate-800 dark:text-white mt-12 mb-6 tracking-tighter flex items-center gap-3"><ChevronRight className="text-blue-600" size={20} strokeWidth={3} /> {line.replace('## ', '')}</h2>;
-                                            if (line.startsWith('### ')) return <h3 key={lIdx} className="text-lg font-black text-slate-800 dark:text-white mt-8 mb-4 tracking-tight">{line.replace('### ', '')}</h3>;
-                                            if (line.startsWith('|')) return null; // Skip tables for now or handle them
-                                            if (line.startsWith('> ')) {
-                                                const tipType = line.includes('IMPORTANT') ? 'important' : line.includes('NOTE') ? 'note' : 'tip';
-                                                return (
-                                                    <div key={lIdx} className={`my-6 p-6 rounded-[2rem] border ${tipType === 'important' ? 'bg-rose-500/5 border-rose-500/10 text-rose-600' :
-                                                            'bg-blue-600/5 border-blue-600/10 text-blue-600'
-                                                        } flex gap-4 items-start`}>
-                                                        <Info size={20} className="shrink-0 mt-1" />
-                                                        <p className="text-sm font-bold leading-relaxed">{line.replace('> ', '').replace(/\[!(.*?)\]/g, '')}</p>
-                                                    </div>
-                                                );
-                                            }
-                                            if (line.startsWith('- ') || line.startsWith('* ')) return <li key={lIdx} className="text-slate-600 dark:text-slate-400 mb-2 list-none flex gap-3 text-sm font-medium"><div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mt-2 shrink-0" /> {line.substring(2)}</li>;
-                                            if (line.trim() === '') return <br key={lIdx} />;
+                            <div className="max-w-none space-y-4">
+                                {content.split('\n').map((line, idx) => {
+                                    const trimmed = line.trim();
 
-                                            // Bold text
-                                            const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-slate-800 dark:text-white">$1</strong>');
+                                    // Empty lines
+                                    if (trimmed === '') return <div key={idx} className="h-2" />;
 
-                                            return (
-                                                <p
-                                                    key={lIdx}
-                                                    className="text-slate-600 dark:text-slate-400 mb-4 text-sm leading-relaxed font-medium"
-                                                    dangerouslySetInnerHTML={{ __html: formattedLine }}
-                                                />
-                                            );
-                                        })}
-                                    </div>
-                                ))}
+                                    // Horizontal Rule
+                                    if (trimmed === '---') return <hr key={idx} className="my-8 border-slate-100 dark:border-white/5" />;
+
+                                    // Headings
+                                    if (line.startsWith('# ')) return <h1 key={idx} className="text-4xl font-black text-slate-900 dark:text-white mb-8 tracking-tighter">{line.replace('# ', '')}</h1>;
+                                    if (line.startsWith('## ')) return <h2 key={idx} className="text-2xl font-black text-slate-800 dark:text-white mt-10 mb-5 tracking-tighter flex items-center gap-3"><ChevronRight className="text-blue-600" size={20} strokeWidth={3} /> {line.replace('## ', '')}</h2>;
+                                    if (line.startsWith('### ')) return <h3 key={idx} className="text-lg font-black text-slate-800 dark:text-white mt-6 mb-3 tracking-tight">{line.replace('### ', '')}</h3>;
+
+                                    // Formatter helper for bold and code
+                                    const format = (text: string) => text
+                                        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-slate-900 dark:text-white">$1</strong>')
+                                        .replace(/`(.*?)`/g, '<code class="bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono text-xs">$1</code>');
+
+                                    // Lists
+                                    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                                        return (
+                                            <div key={idx} className="flex gap-3 ml-2 my-1">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
+                                                <p className="text-sm font-medium text-slate-600 dark:text-slate-400" dangerouslySetInnerHTML={{ __html: format(trimmed.substring(2)) }} />
+                                            </div>
+                                        );
+                                    }
+
+                                    // Alerts (GFM style)
+                                    if (trimmed.startsWith('> ')) {
+                                        const cleanText = trimmed.replace('> ', '').trim();
+                                        if (!cleanText) return null; // Prevent empty red boxes
+
+                                        const isImportant = cleanText.includes('[!IMPORTANT]') || cleanText.includes('[!WARNING]') || cleanText.includes('[!CAUTION]');
+                                        const labelRemoved = cleanText.replace(/\[!(.*?)\]/g, '').trim();
+
+                                        return (
+                                            <div key={idx} className={`my-4 p-5 rounded-[1.5rem] border flex gap-4 items-start ${isImportant ? 'bg-rose-500/5 border-rose-500/10 text-rose-600' :
+                                                    'bg-blue-600/5 border-blue-600/10 text-blue-600'
+                                                }`}>
+                                                <Info size={18} className="shrink-0 mt-0.5" />
+                                                <p className="text-sm font-bold leading-relaxed" dangerouslySetInnerHTML={{ __html: format(labelRemoved) }} />
+                                            </div>
+                                        );
+                                    }
+
+                                    // Table Rows (primitive)
+                                    if (trimmed.startsWith('|')) {
+                                        if (trimmed.includes('---')) return null;
+                                        const cells = trimmed.split('|').filter(c => c.trim() !== '');
+                                        return (
+                                            <div key={idx} className="flex border-b border-slate-100 dark:border-white/5 py-2 overflow-x-auto">
+                                                {cells.map((cell, cIdx) => (
+                                                    <div key={cIdx} className="flex-1 min-w-[80px] text-[10px] font-black text-slate-400 uppercase tracking-tighter px-2" dangerouslySetInnerHTML={{ __html: format(cell.trim()) }} />
+                                                ))}
+                                            </div>
+                                        );
+                                    }
+
+                                    // Default Paragraph
+                                    return (
+                                        <p
+                                            key={idx}
+                                            className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed font-medium"
+                                            dangerouslySetInnerHTML={{ __html: format(trimmed) }}
+                                        />
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

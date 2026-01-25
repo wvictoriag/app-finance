@@ -258,7 +258,7 @@ function DashboardContent() {
                                     'bg-amber-500 animate-pulse'
                                 }`} />
                         </div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v3.2 Stable</span></p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v3.3 Stable</span></p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 lg:gap-8 overflow-visible relative">

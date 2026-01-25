@@ -50,7 +50,7 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
     }, 0);
 
     return (
-        <div className="h-full flex flex-col overflow-hidden p-2 lg:p-4">
+        <div className="h-full flex flex-col overflow-y-auto overflow-x-visible p-2 lg:p-4 scrollbar-hide">
             <div className="flex justify-between items-center mb-4 px-1">
                 <h2 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Cuentas</h2>
                 <button
@@ -235,7 +235,7 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
                 )}
             </div>
 
-            <div className="bg-slate-100 dark:bg-slate-900/60 p-3 md:p-4 rounded-3xl mt-2 relative overflow-hidden group/total shrink-0">
+            <div className="bg-slate-100 dark:bg-slate-900/60 p-3 md:p-4 rounded-3xl mt-2 relative group/total shrink-0">
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 rounded-full bg-accent-primary/5 blur-2xl transition-all"></div>
 
                 <div className="flex items-center gap-2 mb-1 relative z-10 group/tooltip cursor-help">

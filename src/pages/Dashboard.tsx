@@ -241,8 +241,8 @@ function DashboardContent() {
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v2.0</span></p>
                     </div>
 
-                    <div className="flex items-center gap-4 lg:gap-12 overflow-hidden">
-                        <div className="flex items-center gap-4 lg:gap-12 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                    <div className="flex items-center gap-4 lg:gap-12 overflow-visible">
+                        <div className="flex items-center gap-4 lg:gap-12 overflow-x-auto overflow-y-visible pb-2 lg:pb-0 scrollbar-hide">
                             <div className="flex flex-col shrink-0">
                                 <div className="flex items-center gap-1.5 group cursor-help relative mb-0.5">
                                     <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Patrimonio Neto</span>

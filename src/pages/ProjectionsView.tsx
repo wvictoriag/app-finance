@@ -4,6 +4,7 @@ import { TrendingUp, RefreshCcw, Landmark, ShoppingBag, Plus, Trash2, ChevronRig
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Account, Transaction, Category, AccountType } from '../types';
+import { SimulationModal } from '../components/modals/SimulationModal';
 
 interface SimulationScenario {
     id: string;
@@ -27,6 +28,14 @@ interface ProjectionsViewProps {
     categories: Category[];
 }
 
+interface SimModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAdd: (scenario: Partial<SimulationScenario>) => void;
+    initialData: Partial<SimulationScenario>;
+    keyId: string;
+}
+
 export default function ProjectionsView({ transactions, accounts, categories }: ProjectionsViewProps) {
     const [horizon, setHorizon] = useState<'3y' | '10y'>('3y');
     const [scenarios, setScenarios] = useState<SimulationScenario[]>([]);
@@ -37,8 +46,27 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
     const [showInstallmentModal, setShowInstallmentModal] = useState(false);
 
     // Form State
-    const [newSim, setNewSim] = useState<Partial<SimulationScenario>>({ type: 'purchase', amount: 0, startMonth: 1 });
+    const [modalData, setModalData] = useState<Partial<SimulationScenario> | null>(null);
     const [newInstallment, setNewInstallment] = useState<Partial<Installment>>({ amount: 0, remainingMonths: 1 });
+
+    const handlePlanItem = (account: Account) => {
+        const isDebt = ['Payable', 'Credit', 'CreditLine'].includes(account.type);
+        const amount = Math.abs(Number(account.balance)) || 0;
+
+        // Pass data DIRECTLY to modal - no shared state
+        setModalData({
+            name: `Liquidar: ${account.name}`,
+            type: isDebt ? 'purchase' : 'income_change',
+            amount: amount,
+            startMonth: 1
+        });
+    };
+
+    const handleAddScenario = (data: Partial<SimulationScenario>) => {
+        if (!data.name || !data.amount) return;
+        setScenarios([...scenarios, { ...data, id: Date.now().toString() } as SimulationScenario]);
+        setModalData(null); // Close modal
+    };
 
     // 1. Data-Driven Base Engine
     const baseStats = useMemo(() => {
@@ -183,11 +211,10 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
         return data;
     }, [horizon, baseStats, scenarios, installments, accounts]);
 
-    const addScenario = () => {
-        if (!newSim.name || !newSim.amount) return;
-        setScenarios([...scenarios, { ...newSim, id: Date.now().toString() } as SimulationScenario]);
+    const addScenario = (scenarioData: Partial<SimulationScenario>) => {
+        if (!scenarioData.name || !scenarioData.amount) return;
+        setScenarios([...scenarios, { ...scenarioData, id: Date.now().toString() } as SimulationScenario]);
         setShowSimModal(false);
-        setNewSim({ type: 'purchase', amount: 0, startMonth: 1 });
     };
 
     const addInstallment = () => {
@@ -264,16 +291,8 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                                                 <span className="text-[9px] font-black text-slate-400 uppercase">{isDebt ? 'Deuda' : 'Por Cobrar'}</span>
                                             </div>
                                             <button
-                                                onClick={() => {
-                                                    setNewSim({
-                                                        name: `Liquidar: ${a.name}`,
-                                                        type: isDebt ? 'purchase' : 'income_change',
-                                                        amount: balance,
-                                                        startMonth: 1
-                                                    });
-                                                    setShowSimModal(true);
-                                                }}
-                                                className="p-1 px-2 bg-blue-500/10 text-blue-600 rounded-lg text-[8px] font-black uppercase opacity-0 group-hover:opacity-100 transition-all"
+                                                onClick={() => handlePlanItem(a)}
+                                                className="p-1 px-2 bg-blue-500/10 text-blue-600 rounded-lg text-[8px] font-black uppercase opacity-0 group-hover:opacity-100 transition-all hover:bg-blue-600 hover:text-white"
                                                 title="Planificar Cobro/Pago"
                                             >
                                                 Planear
@@ -293,7 +312,12 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                     <div className="flex-1 flex flex-col overflow-hidden min-h-0 border-b border-slate-100 dark:border-white/5">
                         <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Planes de Validación</h3>
-                            <button onClick={() => setShowSimModal(true)} className="w-6 h-6 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:scale-110 transition-all"><Plus size={14} strokeWidth={3} /></button>
+                            <button
+                                onClick={() => setModalData({ type: 'purchase', amount: 0, startMonth: 1 })}
+                                className="w-6 h-6 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:scale-110 transition-all"
+                            >
+                                <Plus size={14} strokeWidth={3} />
+                            </button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
                             {scenarios.map(s => (
@@ -418,39 +442,15 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                 </main>
             </div>
 
-            {/* Simulation Modal */}
-            <AnimatePresence>
-                {showSimModal && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl max-w-md w-full p-8">
-                            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tighter mb-2">Nuevo Escenario</h3>
-                            <p className="text-xs text-slate-400 mb-8 font-medium">Define un cambio futuro (compra grande o cambio de sueldo).</p>
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {[{ id: 'purchase', label: 'Compra/Gasto', icon: ShoppingBag }, { id: 'income_change', label: 'Nuevo Ingreso', icon: Landmark }, { id: 'extra_savings', label: 'Ahorro/Cut', icon: RefreshCcw }].map(t => (
-                                            <button key={t.id} onClick={() => setNewSim({ ...newSim, type: t.id as any })} className={`p-3 rounded-2xl border flex flex-col items-center gap-2 transition-all ${newSim.type === t.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-500'}`}>
-                                                <t.icon size={18} />
-                                                <span className="text-[9px] font-black uppercase text-center leading-none">{t.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <input placeholder="Nombre" className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-bold border-none outline-none focus:ring-2 ring-blue-500/20" onChange={e => setNewSim({ ...newSim, name: e.target.value })} />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto ($)</label><input type="number" placeholder="0" className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-black border-none" onChange={e => setNewSim({ ...newSim, amount: Number(e.target.value) })} /></div>
-                                    <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mes Inicio</label><input type="number" placeholder="1" className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-black border-none" onChange={e => setNewSim({ ...newSim, startMonth: Number(e.target.value) })} /></div>
-                                </div>
-                                <div className="flex gap-3 pt-4">
-                                    <button onClick={() => setShowSimModal(false)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest">Cancelar</button>
-                                    <button onClick={addScenario} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/30">Agregar</button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Simulation Modal - Direct Props with Force Remount Key */}
+            {modalData && (
+                <SimulationModal
+                    key={`sim-modal-${modalData.name}-${modalData.amount}`}
+                    initialData={modalData}
+                    onClose={() => setModalData(null)}
+                    onSave={handleAddScenario}
+                />
+            )}
 
             {/* Installment Modal */}
             <AnimatePresence>
@@ -460,10 +460,34 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                             <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tighter mb-2">Registrar Deuda Actual</h3>
                             <p className="text-xs text-slate-400 mb-8 font-medium">Registra compras en cuotas o créditos activos para ajustar tu capacidad de ahorro real cuando estos terminen.</p>
                             <div className="space-y-6">
-                                <input placeholder="Nombre: Ej. Visa Cuotas, Crédito Auto" className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-bold border-none outline-none focus:ring-2 ring-rose-500/20" onChange={e => setNewInstallment({ ...newInstallment, name: e.target.value })} />
+                                <input
+                                    autoFocus
+                                    placeholder="Nombre: Ej. Visa Cuotas, Crédito Auto"
+                                    className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-bold border-none outline-none focus:ring-2 ring-rose-500/20"
+                                    value={newInstallment.name || ''}
+                                    onChange={e => setNewInstallment({ ...newInstallment, name: e.target.value })}
+                                />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cuota Mensual</label><input type="number" placeholder="0" className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-black border-none" onChange={e => setNewInstallment({ ...newInstallment, amount: Number(e.target.value) })} /></div>
-                                    <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Meses Restantes</label><input type="number" placeholder="1" className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-black border-none" onChange={e => setNewInstallment({ ...newInstallment, remainingMonths: Number(e.target.value) })} /></div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cuota Mensual</label>
+                                        <input
+                                            type="number"
+                                            placeholder="0"
+                                            className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-black border-none outline-none focus:ring-2 ring-rose-500/20"
+                                            value={newInstallment.amount || ''}
+                                            onChange={e => setNewInstallment({ ...newInstallment, amount: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Meses Restantes</label>
+                                        <input
+                                            type="number"
+                                            placeholder="1"
+                                            className="w-full bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 text-sm font-black border-none outline-none focus:ring-2 ring-rose-500/20"
+                                            value={newInstallment.remainingMonths || ''}
+                                            onChange={e => setNewInstallment({ ...newInstallment, remainingMonths: Number(e.target.value) })}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="flex gap-3 pt-4">
                                     <button onClick={() => setShowInstallmentModal(false)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest">Cancelar</button>

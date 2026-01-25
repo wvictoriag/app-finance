@@ -35,7 +35,8 @@ const TransactionModal = lazy(() => import('../components/modals/TransactionModa
 const AccountModal = lazy(() => import('../components/modals/AccountModal').then(m => ({ default: m.AccountModal })));
 const CategoryModal = lazy(() => import('../components/modals/CategoryModal').then(m => ({ default: m.CategoryModal })));
 const ReconcileModal = lazy(() => import('../components/modals/ReconcileModal').then(m => ({ default: m.ReconcileModal })));
-const { BreakdownModal } = lazy(() => import('../components/modals/BreakdownModal').then(m => ({ default: m.BreakdownModal }))) as any;
+
+import { BreakdownModal } from '../components/modals/BreakdownModal';
 
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -447,18 +448,16 @@ function DashboardContent() {
             </ErrorBoundary>
             {/* Breakdown Modal */}
             <ErrorBoundary>
-                <Suspense fallback={<LoadingSpinner />}>
-                    <BreakdownModal
-                        isOpen={showBreakdownModal}
-                        onClose={() => setShowBreakdownModal(false)}
-                        data={{
-                            liquid: accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
-                            receivable: accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0),
-                            debt: accounts.filter(a => ['Payable', 'Credit', 'CreditLine'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
-                            total: netWorth
-                        }}
-                    />
-                </Suspense>
+                <BreakdownModal
+                    isOpen={showBreakdownModal}
+                    onClose={() => setShowBreakdownModal(false)}
+                    data={{
+                        liquid: accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
+                        receivable: accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0),
+                        debt: accounts.filter(a => ['Payable', 'Credit', 'CreditLine'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
+                        total: netWorth
+                    }}
+                />
             </ErrorBoundary>
         </div>
     );

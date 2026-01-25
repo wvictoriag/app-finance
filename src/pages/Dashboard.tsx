@@ -225,8 +225,8 @@ function DashboardContent() {
                 </div>
             </nav>
 
-            <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
-                <header className="flex flex-col lg:flex-row lg:items-center justify-between px-4 lg:px-10 py-4 lg:py-8 bg-white/50 dark:bg-transparent border-b border-slate-100 dark:border-white/5 gap-4">
+            <div className="flex-1 flex flex-col overflow-visible pb-20 lg:pb-0 relative">
+                <header className="flex flex-col lg:flex-row lg:items-center justify-between px-4 lg:px-10 py-4 lg:py-8 bg-white/50 dark:bg-transparent border-b border-slate-100 dark:border-white/5 gap-4 sticky top-0 z-[70] backdrop-blur-md">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3">
                             <h1 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tighter truncate max-w-[200px] md:max-w-none">
@@ -241,15 +241,15 @@ function DashboardContent() {
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v2.0</span></p>
                     </div>
 
-                    <div className="flex items-center gap-4 lg:gap-12 overflow-visible">
-                        <div className="flex items-center gap-4 lg:gap-12 overflow-x-auto overflow-y-visible pb-2 lg:pb-0 scrollbar-hide">
-                            <div className="flex flex-col shrink-0">
+                    <div className="flex items-center gap-4 lg:gap-12 overflow-visible relative">
+                        <div className="flex items-center gap-4 lg:gap-12 overflow-visible pb-2 lg:pb-0 scrollbar-hide">
+                            <div className="flex flex-col shrink-0 relative">
                                 <div className="flex items-center gap-1.5 group cursor-help relative mb-0.5">
                                     <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Patrimonio Neto</span>
                                     <Info size={16} className="text-blue-600 animate-bounce group-hover:animate-none" />
 
                                     {/* Breakdown Tooltip */}
-                                    <div className="absolute top-full mt-2 left-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/10 p-4 rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all pointer-events-none z-[60] min-w-[220px]">
+                                    <div className="absolute top-full mt-2 left-0 sm:left-auto sm:right-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-slate-100 dark:border-white/10 p-4 rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all pointer-events-none z-[80] min-w-[220px]">
                                         <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pb-2 border-b border-slate-50 dark:border-white/5">Desglose de Patrimonio</h4>
                                         <div className="space-y-2">
                                             <div className="flex justify-between gap-6">
@@ -320,7 +320,7 @@ function DashboardContent() {
                                 className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden gap-0"
                             >
                                 {/* Column 1: Accounts */}
-                                <div className="lg:col-span-3 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5">
+                                <div className="lg:col-span-3 flex flex-col overflow-visible border-r border-slate-100 dark:border-white/5 relative z-20">
                                     <AccountsPanel
                                         onAddAccount={handleAddAccount}
                                         onEditAccount={handleEditAccount}
@@ -329,12 +329,12 @@ function DashboardContent() {
                                 </div>
 
                                 {/* Column 2: Monthly Control */}
-                                <div className="lg:col-span-4 flex flex-col overflow-hidden border-r border-slate-100 dark:border-white/5">
+                                <div className="lg:col-span-4 flex flex-col overflow-visible border-r border-slate-100 dark:border-white/5">
                                     <MonthlyControl />
                                 </div>
 
                                 {/* Column 3: Transactions */}
-                                <div className="lg:col-span-5 flex flex-col overflow-hidden">
+                                <div className="lg:col-span-5 flex flex-col overflow-visible">
                                     <TransactionsPanel
                                         onEdit={(tx: Transaction) => {
                                             setEditingTransaction(tx);

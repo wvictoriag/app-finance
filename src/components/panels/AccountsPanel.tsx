@@ -243,7 +243,7 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
                     <Info size={12} className="text-blue-600 animate-pulse group-hover/tooltip:animate-none" />
 
                     {/* Breakdown Tooltip (Mobile Optimized) */}
-                    <div className="absolute bottom-full mb-3 left-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/10 p-4 rounded-2xl shadow-2xl opacity-0 group-hover/tooltip:opacity-100 translate-y-2 group-hover/tooltip:translate-y-0 transition-all pointer-events-none z-[60] min-w-[240px]">
+                    <div className="absolute bottom-full mb-3 left-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-slate-100 dark:border-white/10 p-4 rounded-2xl shadow-2xl opacity-0 group-hover/tooltip:opacity-100 translate-y-2 group-hover/tooltip:translate-y-0 transition-all pointer-events-none z-[80] min-w-[240px]">
                         <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pb-2 border-b border-slate-50 dark:border-white/5">Desglose de Patrimonio</h4>
                         <div className="space-y-2">
                             <div className="flex justify-between gap-6">

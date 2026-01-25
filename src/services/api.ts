@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { Account, Transaction, Category } from '../types';
+import { logger } from '../utils/logger';
 
 export const api = {
     // Accounts
@@ -23,17 +24,17 @@ export const api = {
 
     updateAccount: async (id: string, updates: Partial<Account>): Promise<Account[]> => {
         const now = new Date().toISOString();
-        console.log(`[API] Updating account ${id} with last_update: ${now}`);
+        logger.info(`[API] Updating account ${id} with last_update: ${now}`);
         const { data, error } = await supabase
             .from('accounts')
             .update({ ...updates, last_update: now })
             .eq('id', id)
             .select();
         if (error) {
-            console.error(`[API] Error updating account ${id}:`, error);
+            logger.error(`[API] Error updating account ${id}:`, error);
             throw error;
         }
-        console.log(`[API] Account ${id} updated successfully:`, data?.[0]?.last_update);
+        logger.info(`[API] Account ${id} updated successfully:`, data?.[0]?.last_update);
         return data || [];
     },
 

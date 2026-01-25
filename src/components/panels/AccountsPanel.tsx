@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { Plus, Pencil, Trash2, CheckCircle2, AlertCircle, Scale, Info } from 'lucide-react';
+import { useModal } from '../../contexts/ModalContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import type { Account } from '../../types';
 import { Tooltip } from '../ui/Tooltip';
@@ -48,6 +49,8 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
     const totalEquity = accounts.reduce((sum: number, acc: Account) => {
         return sum + Number(acc.balance);
     }, 0);
+
+    const { openBreakdown } = useModal();
 
     return (
         <div className="h-full flex flex-col overflow-hidden p-2 lg:p-4">
@@ -237,7 +240,7 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
 
             <div
                 className="bg-slate-100 dark:bg-slate-900/60 p-3 md:p-4 rounded-3xl mt-2 relative overflow-hidden group/total shrink-0 cursor-pointer hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
-                onClick={() => (window as any).dispatchOpenBreakdown?.()}
+                onClick={openBreakdown}
             >
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 rounded-full bg-accent-primary/5 blur-2xl transition-all"></div>
 

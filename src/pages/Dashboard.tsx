@@ -43,6 +43,8 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { DashboardProvider, useDashboard } from '../contexts/DashboardContext';
 import { DashboardUIProvider, useDashboardUI } from '../contexts/DashboardUIContext';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { useModal } from '../contexts/ModalContext';
+import { useDashboardModals } from '../hooks/useDashboardModals';
 
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     return (
@@ -78,44 +80,40 @@ function DashboardContent() {
         filteredTransactions,
         monthIncome, monthExpenses, netWorth
     } = useDashboard();
+
     const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'checking'>('checking');
 
-    // Local UI State (Keep these for now as they are specific to this view's modals)
-    const [showModal, setShowModal] = useState(false);
-    const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-    const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-    const [showAccountModal, setShowAccountModal] = useState(false);
-    const [showReconcileModal, setShowReconcileModal] = useState(false);
-    const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-    const [reconcilingAccount, setReconcilingAccount] = useState<Account | null>(null);
-    const [showBreakdownModal, setShowBreakdownModal] = useState(false);
+    // Phase 3 Improvements: Centralized Modal Management & Memoization
+    const { openBreakdown, isBreakdownOpen, closeBreakdown } = useModal();
+    const {
+        showTransactionModal, showAccountModal, showCategoryModal, showReconcileModal,
+        editingTransaction, editingAccount, editingCategory, reconcilingAccount,
+        handleAddTransaction, handleEditTransaction, handleAddAccount, handleEditAccount,
+        handleOpenReconcile, handleAddCategory, handleEditCategory, closeAllModals,
+        setShowCategoryModal, setEditingCategory
+    } = useDashboardModals();
 
-    // Global dispatch for Breakdown Modal
-    useEffect(() => {
-        (window as any).dispatchOpenBreakdown = () => setShowBreakdownModal(true);
-        return () => { delete (window as any).dispatchOpenBreakdown; };
-    }, []);
+    const breakdownData = useMemo(() => ({
+        liquid: accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
+        receivable: accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0),
+        debt: accounts.filter(a => ['Payable', 'Credit', 'CreditLine'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
+        total: netWorth
+    }), [accounts, netWorth]);
 
     // Keyboard Shortcuts
     const shortcuts = useMemo(() => ({
-        'n': () => { setEditingTransaction(null); setShowModal(true); },
-        'a': () => { setEditingAccount(null); setShowAccountModal(true); },
-        'c': () => { setEditingCategory(null); setShowCategoryModal(true); },
+        'n': handleAddTransaction,
+        'a': handleAddAccount,
+        'c': handleAddCategory,
         '/': () => {
             const searchInput = document.querySelector('input[placeholder="Buscar..."]') as HTMLInputElement;
             searchInput?.focus();
         },
         'Escape': () => {
-            setShowModal(false);
-            setShowAccountModal(false);
-            setShowCategoryModal(false);
-            setShowReconcileModal(false);
-            setEditingTransaction(null);
-            setEditingAccount(null);
-            setEditingCategory(null);
+            closeAllModals();
+            closeBreakdown();
         }
-    }), []);
+    }), [handleAddTransaction, handleAddAccount, handleAddCategory, closeAllModals, closeBreakdown]);
 
     useKeyboardShortcuts(shortcuts);
 
@@ -146,36 +144,8 @@ function DashboardContent() {
         return () => clearInterval(interval);
     }, []);
 
-    // Selection handlers
-    // URL view sync is now in UIProvider (actually view isn't yet, let's keep it simple here for now)
-
-    const handleAddAccount = useCallback(() => setShowAccountModal(true), []);
     const handleSelectAccount = useCallback((acc: Account) => setSelectedAccount(selectedAccount?.id === acc.id ? null : acc), [selectedAccount, setSelectedAccount]);
-    const handleEditAccount = useCallback((acc: Account) => {
-        setEditingAccount(acc);
-        setShowAccountModal(true);
-    }, []);
-    const handleOpenReconcile = useCallback((acc: Account) => {
-        setReconcilingAccount(acc);
-        setShowReconcileModal(true);
-    }, []);
-
     const handleLogout = useCallback(async () => { await supabase.auth.signOut(); }, []);
-
-    const handleOpenAddModal = useCallback(() => {
-        setEditingTransaction(null);
-        setShowModal(true);
-    }, []);
-
-    const handleOpenEditModal = useCallback((tx: Transaction) => {
-        setEditingTransaction(tx);
-        setShowModal(true);
-    }, []);
-
-    const handleCloseModal = useCallback(() => setShowModal(false), []);
-    const handleCloseAccountModal = useCallback(() => { setShowAccountModal(false); setEditingAccount(null); }, []);
-    const handleCloseCategoryModal = useCallback(() => { setShowCategoryModal(false); setEditingCategory(null); }, []);
-    const handleCloseReconcileModal = useCallback(() => setShowReconcileModal(false), []);
 
 
     if (loadingAccs && accounts.length === 0) {
@@ -255,7 +225,7 @@ function DashboardContent() {
                             <div className="flex flex-col shrink-0">
                                 <div
                                     className="flex items-center gap-1.5 group cursor-pointer relative mb-0.5 hover:text-blue-500 transition-colors"
-                                    onClick={() => setShowBreakdownModal(true)}
+                                    onClick={openBreakdown}
                                 >
                                     <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-blue-500">Patrimonio Neto</span>
                                     <Info size={14} className="text-blue-600" />
@@ -319,12 +289,9 @@ function DashboardContent() {
                                 {/* Column 3: Transactions */}
                                 <div className="lg:col-span-5 flex flex-col overflow-hidden">
                                     <TransactionsPanel
-                                        onEdit={(tx: Transaction) => {
-                                            setEditingTransaction(tx);
-                                            setShowModal(true);
-                                        }}
+                                        onEdit={handleEditTransaction}
                                     />
-                                    <button onClick={() => { setEditingTransaction(null); setShowModal(true); }} className="absolute bottom-10 right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
+                                    <button onClick={handleAddTransaction} className="absolute bottom-10 right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
                                         <Plus size={32} strokeWidth={3} />
                                     </button>
                                 </div>
@@ -406,8 +373,8 @@ function DashboardContent() {
             <ErrorBoundary>
                 <Suspense fallback={<LoadingSpinner />}>
                     <TransactionModal
-                        isOpen={showModal}
-                        onClose={handleCloseModal}
+                        isOpen={showTransactionModal}
+                        onClose={closeAllModals}
                         editingTransaction={editingTransaction}
                     />
                 </Suspense>
@@ -418,7 +385,7 @@ function DashboardContent() {
                 <Suspense fallback={<LoadingSpinner />}>
                     <AccountModal
                         isOpen={showAccountModal}
-                        onClose={handleCloseAccountModal}
+                        onClose={closeAllModals}
                         editingAccount={editingAccount}
                     />
                 </Suspense>
@@ -429,7 +396,7 @@ function DashboardContent() {
                 <Suspense fallback={<LoadingSpinner />}>
                     <CategoryModal
                         isOpen={showCategoryModal}
-                        onClose={handleCloseCategoryModal}
+                        onClose={closeAllModals}
                         editingCategory={editingCategory}
                         setEditingCategory={setEditingCategory}
                     />
@@ -441,7 +408,7 @@ function DashboardContent() {
                 <Suspense fallback={<LoadingSpinner />}>
                     <ReconcileModal
                         isOpen={showReconcileModal}
-                        onClose={handleCloseReconcileModal}
+                        onClose={closeAllModals}
                         account={reconcilingAccount}
                     />
                 </Suspense>
@@ -449,14 +416,9 @@ function DashboardContent() {
             {/* Breakdown Modal */}
             <ErrorBoundary>
                 <BreakdownModal
-                    isOpen={showBreakdownModal}
-                    onClose={() => setShowBreakdownModal(false)}
-                    data={{
-                        liquid: accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
-                        receivable: accounts.filter(a => a.type === 'Receivable').reduce((s, a) => s + Number(a.balance), 0),
-                        debt: accounts.filter(a => ['Payable', 'Credit', 'CreditLine'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
-                        total: netWorth
-                    }}
+                    isOpen={isBreakdownOpen}
+                    onClose={closeBreakdown}
+                    data={breakdownData}
                 />
             </ErrorBoundary>
         </div>

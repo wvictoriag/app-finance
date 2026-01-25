@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import type { Transaction } from '../types';
+import toast from 'react-hot-toast';
+import { logger } from '../utils/logger';
 
 export const useTransactions = (limit: number = 50) => {
     const queryClient = useQueryClient();
@@ -26,6 +28,8 @@ export const useTransactions = (limit: number = 50) => {
         },
         onError: (err, newTx, context) => {
             queryClient.setQueryData(['transactions', { limit }], context?.previousTransactions);
+            logger.error('[Hook] Error adding transaction:', err);
+            toast.error('Error al guardar la transacción. Por favor, intenta de nuevo.');
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -41,7 +45,12 @@ export const useTransactions = (limit: number = 50) => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
             queryClient.invalidateQueries({ queryKey: ['transaction-sums'] });
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
+            toast.success('Transacción actualizada');
         },
+        onError: (err) => {
+            logger.error('[Hook] Error updating transaction:', err);
+            toast.error('Error al actualizar la transacción');
+        }
     });
 
     const deleteTransactionMutation = useMutation({
@@ -50,7 +59,12 @@ export const useTransactions = (limit: number = 50) => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
             queryClient.invalidateQueries({ queryKey: ['transaction-sums'] });
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
+            toast.success('Transacción eliminada');
         },
+        onError: (err) => {
+            logger.error('[Hook] Error deleting transaction:', err);
+            toast.error('Error al eliminar la transacción');
+        }
     });
 
     const deleteTransactionsMutation = useMutation({
@@ -59,7 +73,12 @@ export const useTransactions = (limit: number = 50) => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
             queryClient.invalidateQueries({ queryKey: ['transaction-sums'] });
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
+            toast.success('Transacciones eliminadas');
         },
+        onError: (err) => {
+            logger.error('[Hook] Error deleting multiple transactions:', err);
+            toast.error('Error al eliminar las transacciones');
+        }
     });
 
     return {

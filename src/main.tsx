@@ -6,6 +6,7 @@ import './index.css';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { RegionProvider } from './contexts/RegionContext';
+import { ModalProvider } from './contexts/ModalContext';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -23,10 +24,12 @@ createRoot(rootElement).render(
     <StrictMode>
         <ErrorBoundary>
             <RegionProvider>
-                <QueryClientProvider client={queryClient}>
-                    <App />
-                    <ReactQueryDevtools initialIsOpen={false} />
-                </QueryClientProvider>
+                <ModalProvider>
+                    <QueryClientProvider client={queryClient}>
+                        <App />
+                        <ReactQueryDevtools initialIsOpen={false} />
+                    </QueryClientProvider>
+                </ModalProvider>
             </RegionProvider>
         </ErrorBoundary>
     </StrictMode>

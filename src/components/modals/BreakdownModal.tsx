@@ -20,6 +20,9 @@ export function BreakdownModal({ isOpen, onClose, data }: BreakdownModalProps) {
         <div
             className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]"
             onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
         >
             <div
                 className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl max-w-sm w-full overflow-hidden border border-white/20"
@@ -30,14 +33,15 @@ export function BreakdownModal({ isOpen, onClose, data }: BreakdownModalProps) {
                     <button
                         onClick={onClose}
                         className="absolute top-6 right-6 p-2 hover:bg-white/20 rounded-full transition-colors"
+                        aria-label="Cerrar ventana"
                     >
                         <X size={20} />
                     </button>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="bg-white/20 p-2 rounded-xl">
+                        <div className="bg-white/20 p-2 rounded-xl" aria-hidden="true">
                             <ShieldCheck size={24} />
                         </div>
-                        <h3 className="text-xl font-black tracking-tight">Tu Patrimonio Rico</h3>
+                        <h3 id="modal-title" className="text-xl font-black tracking-tight">Tu Patrimonio Rico</h3>
                     </div>
                     <p className="text-blue-100 text-sm font-medium opacity-80">Desglose detallado de tu valor neto actual.</p>
                 </div>

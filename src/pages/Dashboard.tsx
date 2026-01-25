@@ -6,7 +6,7 @@ import {
     LogOut, Pencil, Trash2, ArrowRightLeft, Scale,
     Moon, Sun, LayoutGrid, BarChart3, PieChart,
     Plus, Settings, User as UserIcon, Loader2,
-    RefreshCw, Wifi, WifiOff, CheckCircle2, AlertCircle, X, ExternalLink, Info
+    RefreshCw, Wifi, WifiOff, CheckCircle2, AlertCircle, X, ExternalLink, Info, HelpCircle
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { useAccounts } from '../hooks/useAccounts';
@@ -45,6 +45,7 @@ import { DashboardUIProvider, useDashboardUI } from '../contexts/DashboardUICont
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useModal } from '../contexts/ModalContext';
 import { useDashboardModals } from '../hooks/useDashboardModals';
+import { HelpModal } from '../components/modals/HelpModal';
 
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     return (
@@ -92,6 +93,42 @@ function DashboardContent() {
         handleOpenReconcile, handleAddCategory, handleEditCategory, closeAllModals,
         setShowCategoryModal, setEditingCategory
     } = useDashboardModals();
+
+    const [showHelpModal, setShowHelpModal] = useState(false);
+
+    // Calculate Runway (Financial Autonomy)
+    const runwayData = useMemo(() => {
+        if (transactions.length === 0) return { months: 0, burn: 0 };
+
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+        const recentExpenses = transactions.filter(tx =>
+            new Date(tx.date) >= sixMonthsAgo &&
+            Number(tx.amount) < 0 &&
+            !tx.destination_account_id
+        );
+
+        if (recentExpenses.length === 0) return { months: 99, burn: 0 };
+
+        const totalSpent = recentExpenses.reduce((sum, tx) => sum + Math.abs(Number(tx.amount)), 0);
+
+        // Find unique months in the transaction set to get a real average
+        const uniqueMonths = new Set(recentExpenses.map(tx => tx.date.slice(0, 7))).size || 1;
+        const averageBurn = totalSpent / uniqueMonths;
+
+        // Liquidity: accounts that are not Receivable/Debt
+        const liquidBalance = accounts
+            .filter(a => !['Receivable', 'Payable', 'Credit', 'CreditLine'].includes(a.type))
+            .reduce((sum, a) => sum + Number(a.balance), 0);
+
+        const months = averageBurn > 0 ? (liquidBalance / averageBurn) : 99;
+
+        return {
+            months: Math.min(Math.round(months * 10) / 10, 99),
+            burn: Math.round(averageBurn)
+        };
+    }, [transactions, accounts]);
 
     const breakdownData = useMemo(() => ({
         liquid: accounts.filter(a => ['Checking', 'Vista', 'Savings', 'Cash', 'Investment', 'Asset'].includes(a.type)).reduce((s, a) => s + Number(a.balance), 0),
@@ -201,6 +238,10 @@ function DashboardContent() {
                         <LogOut size={20} />
                         <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Salir</span>
                     </button>
+                    <div className="hidden lg:flex flex-col items-center mt-auto pb-4">
+                        <span className="text-[7px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest leading-none">Global</span>
+                        <span className="text-[8px] font-black text-blue-500 tracking-tighter">v3.2</span>
+                    </div>
                 </div>
             </nav>
 
@@ -217,11 +258,11 @@ function DashboardContent() {
                                     'bg-amber-500 animate-pulse'
                                 }`} />
                         </div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v2.0</span></p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v3.2 Stable</span></p>
                     </div>
 
-                    <div className="flex items-center gap-4 lg:gap-12 overflow-visible relative">
-                        <div className="flex items-center gap-4 lg:gap-12 overflow-visible pb-2 lg:pb-0 scrollbar-hide">
+                    <div className="flex flex-wrap items-center gap-4 lg:gap-8 overflow-visible relative">
+                        <div className="flex flex-wrap items-center gap-4 lg:gap-8 overflow-visible scrollbar-hide">
                             <div className="flex flex-col shrink-0">
                                 <div
                                     className="flex items-center gap-1.5 group cursor-pointer relative mb-0.5 hover:text-blue-500 transition-colors"
@@ -246,9 +287,33 @@ function DashboardContent() {
                                     {formatCurrency(monthExpenses)}
                                 </span>
                             </div>
+                            <div className="flex flex-col shrink-0 px-4 md:px-6 border-l border-slate-100 dark:border-white/5 bg-blue-50/20 dark:bg-white/5 py-2 rounded-2xl">
+                                <div className="flex items-center gap-1.5 mb-0.5 group cursor-help relative">
+                                    <span className="text-[8px] md:text-[9px] font-black text-blue-500 uppercase tracking-[0.2em]">Autonomía</span>
+                                    <span className="text-[10px] font-black text-slate-400 opacity-50">Runway</span>
+                                    <div className="absolute top-full mt-2 left-0 bg-slate-900 text-white p-3 rounded-2xl text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all z-[60] shadow-2xl w-48 pointer-events-none">
+                                        Basado en un gasto promedio de <span className="text-emerald-400">{formatCurrency(runwayData.burn)}/mes</span> (últimos 6 meses).
+                                    </div>
+                                </div>
+                                <div className="flex items-baseline gap-1">
+                                    <span className={`text-base md:text-lg lg:text-xl font-black tracking-tighter ${runwayData.months < 3 ? 'text-rose-500' :
+                                        runwayData.months < 6 ? 'text-amber-500' : 'text-blue-600'
+                                        }`}>
+                                        {runwayData.months}
+                                    </span>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase">Meses</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-3 border-l border-slate-200 dark:border-white/5 pl-4 lg:pl-12 shrink-0">
+                            <button
+                                onClick={() => setShowHelpModal(true)}
+                                className="w-10 h-10 bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-blue-600 rounded-xl flex items-center justify-center transition-all group relative"
+                            >
+                                <HelpCircle size={20} />
+                                <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] font-black py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-all pointer-events-none uppercase">Ayuda</span>
+                            </button>
                             <RegionSelector />
                             <button
                                 onClick={handleLogout}
@@ -421,6 +486,12 @@ function DashboardContent() {
                     data={breakdownData}
                 />
             </ErrorBoundary>
+
+            {/* Help Modal */}
+            <HelpModal
+                isOpen={showHelpModal}
+                onClose={() => setShowHelpModal(false)}
+            />
         </div>
     );
 }

@@ -69,13 +69,26 @@ export function TransactionModal({
                 finalAmount = -finalAmount;
             }
 
+            // Auto-tagging logic: Extract prefix before '|'
+            const description = data.description || '';
+            const tags: string[] = [];
+            const tagMatch = description.match(/^([^|]+)\|/);
+            if (tagMatch && tagMatch[1]) {
+                const tag = tagMatch[1].trim();
+                // Avoid empty tags or very long ones
+                if (tag && tag.length < 15) {
+                    tags.push(tag);
+                }
+            }
+
             const payload = {
                 account_id: data.account_id,
                 date: data.date,
                 amount: finalAmount,
                 description: data.description,
                 category_id: data.category_id || null,
-                destination_account_id: data.type === 'transfer' ? data.destination_account_id : null
+                destination_account_id: data.type === 'transfer' ? data.destination_account_id : null,
+                tags: tags.length > 0 ? tags : null
             };
 
             if (editingTransaction) {

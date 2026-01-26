@@ -25,6 +25,7 @@ export interface Transaction {
     amount: number;
     description?: string;
     date: string;
+    tags?: string[] | null;
     created_at?: string;
 
     // Joined fields

@@ -45,7 +45,8 @@ import { DashboardUIProvider, useDashboardUI } from '../contexts/DashboardUICont
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useModal } from '../contexts/ModalContext';
 import { useDashboardModals } from '../hooks/useDashboardModals';
-import { HelpModal } from '../components/modals/HelpModal';
+import { HelpCenter } from '../components/help/HelpCenter';
+import { BottomNav } from '../components/navigation/BottomNav';
 
 export default function Dashboard({ view = 'dashboard' }: { view?: string }) {
     return (
@@ -196,56 +197,48 @@ function DashboardContent() {
 
     return (
         <div className="flex flex-col lg:flex-row h-screen bg-white dark:bg-carbon text-slate-900 dark:text-slate-100 font-sans overflow-hidden selection:bg-indigo-500/30">
-            {/* Nav */}
-            <nav className="fixed bottom-0 left-0 w-full lg:relative lg:w-24 bg-white dark:bg-carbon border-t lg:border-t-0 lg:border-r border-slate-100 dark:border-white/5 flex lg:flex-col items-center justify-around lg:justify-start py-4 lg:py-10 lg:gap-10 z-30 shrink-0">
-                <div className="hidden lg:flex w-10 h-10 bg-accent-primary rounded-xl items-center justify-center shadow-things hover:scale-105 transition-all cursor-pointer group" onClick={() => setCurrentView('dashboard')}>
-                    <LayoutGrid size={20} className="text-white" />
+            {/* Desktop Sidebar Navigation */}
+            <nav className="premium-sidebar">
+                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-12 shadow-xl shadow-blue-500/20">
+                    <LayoutGrid className="text-white" size={24} />
                 </div>
-                <div className="flex lg:flex-col gap-2 lg:gap-6">
-                    <button onClick={() => setCurrentView('dashboard')} className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-1 ${currentView === 'dashboard' ? 'bg-slate-100 dark:bg-white/5 text-accent-primary' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
+
+                <div className="flex flex-col gap-8">
+                    <button onClick={() => setCurrentView('dashboard')} className={`p-3 rounded-xl transition-all duration-300 ${currentView === 'dashboard' ? 'bg-slate-100 dark:bg-white/5 text-blue-600' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
                         <LayoutGrid size={22} />
-                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Inicio</span>
                     </button>
-                    <button onClick={() => setCurrentView('projections')} className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-1 ${currentView === 'projections' ? 'bg-slate-100 dark:bg-white/5 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
+                    <button onClick={() => setCurrentView('projections')} className={`p-3 rounded-xl transition-all duration-300 ${currentView === 'projections' ? 'bg-slate-100 dark:bg-white/5 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
                         <BarChart3 size={22} />
-                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Simula</span>
                     </button>
-
-
-                    <button onClick={() => setCurrentView('stats')} className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-1 ${currentView === 'stats' ? 'bg-slate-100 dark:bg-white/5 text-purple-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
+                    <button onClick={() => setCurrentView('stats')} className={`p-3 rounded-xl transition-all duration-300 ${currentView === 'stats' ? 'bg-slate-100 dark:bg-white/5 text-purple-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
                         <PieChart size={22} />
-                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Stats</span>
                     </button>
-                    <button onClick={() => setCurrentView('calendar')} className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-1 ${currentView === 'calendar' ? 'bg-slate-100 dark:bg-white/5 text-orange-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
+                    <button onClick={() => setCurrentView('calendar')} className={`p-3 rounded-xl transition-all duration-300 ${currentView === 'calendar' ? 'bg-slate-100 dark:bg-white/5 text-orange-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Agenda</span>
                     </button>
-                    <button onClick={() => setCurrentView('goals')} className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-1 ${currentView === 'goals' ? 'bg-slate-100 dark:bg-white/5 text-pink-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
+                    <button onClick={() => setCurrentView('goals')} className={`p-3 rounded-xl transition-all duration-300 ${currentView === 'goals' ? 'bg-slate-100 dark:bg-white/5 text-pink-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-2c1 .5 1.6 1 2 1 2.2 0 4-1.8 4-5.6 0-1.1-.2-4.9-5-7.3l-1-.6c.3-1.2.9-3.5-3-3.6Z" /><path d="M6 14v4" /><path d="M10 13a2 2 0 1 0 4 0" /></svg>
-                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Metas</span>
                     </button>
                 </div>
-                <div className="flex lg:flex-col lg:mt-auto gap-2 lg:gap-6">
-                    <button onClick={() => setDarkMode(!darkMode)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all flex flex-col items-center gap-1">
+
+                <div className="mt-auto flex flex-col gap-6">
+                    <button onClick={() => setDarkMode(!darkMode)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all">
                         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Modo</span>
                     </button>
-                    <button onClick={() => setShowCategoryModal(true)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all flex flex-col items-center gap-1">
+                    <button onClick={() => setShowCategoryModal(true)} className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all">
                         <Settings size={20} />
-                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Ajustes</span>
                     </button>
-                    <button onClick={handleLogout} className="p-3 text-rose-500/50 hover:text-rose-500 transition-all flex flex-col items-center gap-1">
+                    <button onClick={handleLogout} className="p-3 text-rose-500/50 hover:text-rose-500 transition-all">
                         <LogOut size={20} />
-                        <span className="lg:hidden text-[9px] font-bold uppercase tracking-tighter">Salir</span>
                     </button>
-                    <div className="hidden lg:flex flex-col items-center mt-auto pb-4">
+                    <div className="flex flex-col items-center pb-4">
                         <span className="text-[7px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest leading-none">Global</span>
-                        <span className="text-[8px] font-black text-blue-500 tracking-tighter">v3.2</span>
+                        <span className="text-[8px] font-black text-blue-500 tracking-tighter">v3.7</span>
                     </div>
                 </div>
             </nav>
 
-            <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
+            <div className="flex-1 flex flex-col lg:pl-24 overflow-hidden safe-area-bottom">
                 <header className="flex flex-col lg:flex-row lg:items-center justify-between px-4 lg:px-10 py-4 lg:py-8 bg-white/50 dark:bg-transparent border-b border-slate-100 dark:border-white/5 gap-4">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3">
@@ -487,11 +480,14 @@ function DashboardContent() {
                 />
             </ErrorBoundary>
 
-            {/* Help Modal */}
-            <HelpModal
+            {/* Help Center 2.0 */}
+            <HelpCenter
                 isOpen={showHelpModal}
                 onClose={() => setShowHelpModal(false)}
             />
+
+            {/* Mobile Bottom Navigation */}
+            <BottomNav />
         </div>
     );
 }

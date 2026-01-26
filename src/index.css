@@ -8,7 +8,8 @@
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     @apply bg-white text-slate-900 dark:bg-carbon dark:text-slate-100 antialiased;
-    overflow: hidden;
+    /* Allow scrolling on body for mobile if needed, but keep it tight for dashboard */
+    @apply overflow-hidden;
   }
 }
 
@@ -18,7 +19,7 @@
   }
 
   .things-card {
-    @apply bg-white dark:bg-slate-900/40 rounded-3xl shadow-things dark:shadow-things-dark border border-transparent dark:hover:border-white/5 transition-all duration-500;
+    @apply bg-white dark:bg-slate-900/40 rounded-3xl shadow-things dark:shadow-things-dark border border-transparent dark:hover:border-white/5 transition-all duration-500 overflow-hidden;
   }
 
   .glass-panel {
@@ -27,6 +28,25 @@
 
   .glass-card {
     @apply things-card;
+  }
+
+  /* Fluid UI Utils */
+  .fluid-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    @apply gap-4 md:gap-6 lg:gap-8;
+  }
+
+  .premium-sidebar {
+    @apply hidden lg:flex flex-col w-24 h-screen bg-white/50 dark:bg-slate-900/20 backdrop-blur-xl border-r border-slate-100 dark:border-white/5 py-8 items-center fixed left-0 top-0 z-[60];
+  }
+
+  .bottom-nav {
+    @apply flex lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-slate-100 dark:border-white/5 px-6 items-center justify-between z-[60] pb-safe;
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .btn-primary {
@@ -38,9 +58,9 @@
   }
 }
 
-/* Discrete Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+/* Transitions & Animations */
+.animate-in {
+  animation: fadeIn 0.4s both;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {

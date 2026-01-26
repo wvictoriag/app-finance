@@ -60,12 +60,14 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
             amount: amount,
             startMonth: 1
         });
+        setShowSimModal(true); // CRITICAL: Actually open the modal!
     };
 
     const handleAddScenario = (data: Partial<SimulationScenario>) => {
         if (!data.name || !data.amount) return;
         setScenarios([...scenarios, { ...data, id: Date.now().toString() } as SimulationScenario]);
-        setModalData(null); // Close modal
+        setModalData(null);
+        setShowSimModal(false); // Close modal properly
     };
 
     // 1. Data-Driven Base Engine
@@ -443,11 +445,11 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
             </div>
 
             {/* Simulation Modal - Direct Props with Force Remount Key */}
-            {modalData && (
+            {showSimModal && modalData && (
                 <SimulationModal
                     key={`sim-modal-${modalData.name}-${modalData.amount}`}
                     initialData={modalData}
-                    onClose={() => setModalData(null)}
+                    onClose={() => { setModalData(null); setShowSimModal(false); }}
                     onSave={handleAddScenario}
                 />
             )}

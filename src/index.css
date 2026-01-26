@@ -42,7 +42,8 @@
   }
 
   .bottom-nav {
-    @apply flex lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-slate-100 dark:border-white/5 px-6 items-center justify-between z-[60] pb-safe;
+    @apply flex lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-slate-100 dark:border-white/5 px-6 items-center justify-between z-[60];
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .safe-area-bottom {
@@ -76,18 +77,37 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInFromBottom {
-  from { transform: translateY(1rem); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideInFromRight {
-  from { transform: translateX(1rem); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(1rem);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .animate-in {

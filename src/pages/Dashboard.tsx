@@ -234,7 +234,7 @@ function DashboardContent() {
                     </button>
                     <div className="flex flex-col items-center pb-4">
                         <span className="text-[7px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest leading-none">Global</span>
-                        <span className="text-[8px] font-black text-blue-500 tracking-tighter">v3.8</span>
+                        <span className="text-[8px] font-black text-blue-500 tracking-tighter">v3.9</span>
                     </div>
                 </div>
             </nav>
@@ -252,7 +252,7 @@ function DashboardContent() {
                                     'bg-amber-500 animate-pulse'
                                 }`} />
                         </div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v3.8 Stable</span></p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Guapacha Intelligence <span className="text-emerald-500 ml-1">v3.9 Stable</span></p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 lg:gap-8 overflow-visible relative">

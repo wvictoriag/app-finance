@@ -1,74 +1,69 @@
-// Service Worker for PWA
-const CACHE_NAME = 'guapacha-finance-v3.7';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/src/main.tsx',
-    '/src/index.css',
-    '/USER_MANUAL.md'
-];
+// Service Worker for PWA - Production Ready
+const CACHE_NAME = 'guapacha-finance-v3.9';
 
-// Install event - cache resources
+// Install event - skip waiting to activate immediately
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache);
-            })
-            .catch((error) => {
-                console.log('Cache installation failed:', error);
-            })
-    );
+    console.log('[SW] Installing version 3.9');
     self.skipWaiting();
 });
 
-// Fetch event - serve from cache when offline
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                // Cache hit - return response
-                if (response) {
-                    return response;
-                }
-
-                // Clone the request
-                const fetchRequest = event.request.clone();
-
-                return fetch(fetchRequest).then((response) => {
-                    // Check if valid response
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
-                    }
-
-                    // Clone the response
-                    const responseToCache = response.clone();
-
-                    caches.open(CACHE_NAME)
-                        .then((cache) => {
-                            cache.put(event.request, responseToCache);
-                        });
-
-                    return response;
-                });
-            })
-    );
-});
-
-// Activate event - clean up old caches
+// Activate event - clean up ALL old caches
 self.addEventListener('activate', (event) => {
+    console.log('[SW] Activating version 3.9');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cacheName);
+                        console.log('[SW] Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
+        }).then(() => {
+            console.log('[SW] Claiming clients');
+            return self.clients.claim();
         })
     );
-    self.clients.claim();
+});
+
+// Fetch event - Network First strategy (safer for SPAs)
+self.addEventListener('fetch', (event) => {
+    // Skip non-GET requests
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
+    // Skip API calls (Supabase)
+    if (event.request.url.includes('supabase.co')) {
+        return;
+    }
+
+    event.respondWith(
+        fetch(event.request)
+            .then((response) => {
+                // Only cache successful responses
+                if (response && response.status === 200 && response.type === 'basic') {
+                    const responseToCache = response.clone();
+
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
+                return response;
+            })
+            .catch(() => {
+                // Network failed, try cache
+                return caches.match(event.request).then((cachedResponse) => {
+                    if (cachedResponse) {
+                        console.log('[SW] Serving from cache:', event.request.url);
+                        return cachedResponse;
+                    }
+                    // If no cache, return a basic offline page for navigation requests
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('/index.html');
+                    }
+                });
+            })
+    );
 });

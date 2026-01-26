@@ -278,13 +278,29 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                     />
                                     <div className={`w-1 h-5 md:h-6 rounded-full shrink-0 ${statusColor}`}></div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="font-bold text-slate-900 dark:text-white text-xs md:text-sm truncate">
-                                            {isTransfer ? (
-                                                <span className="flex items-center gap-2">
-                                                    {tx.description || 'Transferencia'}
-                                                </span>
-                                            ) : (
-                                                tx.description || tx.categories?.name || 'Varios'
+                                        <div className="font-bold text-slate-900 dark:text-white text-xs md:text-sm truncate flex items-center gap-2">
+                                            <span className="truncate">
+                                                {isTransfer ? (
+                                                    tx.description || 'Transferencia'
+                                                ) : (
+                                                    tx.description || tx.categories?.name || 'Varios'
+                                                )}
+                                            </span>
+                                            {tx.tags && tx.tags.length > 0 && (
+                                                <div className="flex gap-1 shrink-0">
+                                                    {tx.tags.map((tag, tIdx) => (
+                                                        <button
+                                                            key={tIdx}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSearchQuery(tag);
+                                                            }}
+                                                            className="px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8px] font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                                        >
+                                                            #{tag}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             )}
                                         </div>
                                         <div className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1 md:gap-2 mt-0.5">

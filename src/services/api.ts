@@ -118,12 +118,13 @@ export const api = {
 
         if (error) throw error;
 
-        // Force update last_update on account
+        // Force update last_update on account using transaction date
+        const updateDate = transaction.date || new Date().toISOString();
         if (transaction.account_id) {
-            await supabase.from('accounts').update({ last_update: new Date().toISOString() }).eq('id', transaction.account_id);
+            await supabase.from('accounts').update({ last_update: updateDate }).eq('id', transaction.account_id);
         }
         if (transaction.destination_account_id) {
-            await supabase.from('accounts').update({ last_update: new Date().toISOString() }).eq('id', transaction.destination_account_id);
+            await supabase.from('accounts').update({ last_update: updateDate }).eq('id', transaction.destination_account_id);
         }
 
         return data || [];
@@ -140,11 +141,12 @@ export const api = {
         if (error) throw error;
 
         // Force update last_update on account
+        const updateDate = data?.[0]?.date || new Date().toISOString();
         if (data?.[0]?.account_id) {
-            await supabase.from('accounts').update({ last_update: new Date().toISOString() }).eq('id', data[0].account_id);
+            await supabase.from('accounts').update({ last_update: updateDate }).eq('id', data[0].account_id);
         }
         if (data?.[0]?.destination_account_id) {
-            await supabase.from('accounts').update({ last_update: new Date().toISOString() }).eq('id', data[0].destination_account_id);
+            await supabase.from('accounts').update({ last_update: updateDate }).eq('id', data[0].destination_account_id);
         }
 
         return data || [];

@@ -1,15 +1,15 @@
 // Service Worker for PWA - Production Ready
-const CACHE_NAME = 'guapacha-finance-v3.9';
+const CACHE_NAME = 'guapacha-finance-v4.0';
 
 // Install event - skip waiting to activate immediately
 self.addEventListener('install', (event) => {
-    console.log('[SW] Installing version 3.9');
+    console.log('[SW] Installing version 4.0');
     self.skipWaiting();
 });
 
 // Activate event - clean up ALL old caches
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Activating version 3.9');
+    console.log('[SW] Activating version 4.0');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(

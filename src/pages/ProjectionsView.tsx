@@ -243,11 +243,11 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Patrimonio Neto Hoy</span>
-                            <div className="flex items-center gap-1.5 group cursor-help">
+                            <div className="flex items-center gap-1.5 group cursor-help" aria-label="Detalles del patrimonio neto">
                                 <span className={`text-sm font-black tracking-tight text-blue-500`}>
                                     {formatCurrency(accounts.reduce((sum, acc) => sum + Number(acc.balance), 0))}
                                 </span>
-                                <Info size={12} className="text-slate-300" />
+                                <Info size={12} className="text-slate-300" aria-hidden="true" />
                                 <div className="absolute top-20 left-8 bg-slate-900 text-white p-3 rounded-2xl text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-2xl pointer-events-none">
                                     <div className="flex justify-between gap-4 mb-1">
                                         <span className="text-slate-400">Cuentas:</span>
@@ -268,8 +268,8 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                 </div>
 
                 <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 p-1 rounded-2xl">
-                    <button onClick={() => setHorizon('3y')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${horizon === '3y' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-400'}`}>3 Años</button>
-                    <button onClick={() => setHorizon('10y')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${horizon === '10y' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-400'}`}>10 Años</button>
+                    <button onClick={() => setHorizon('3y')} aria-label="Ver proyección a 3 años" className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${horizon === '3y' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-400'}`}>3 Años</button>
+                    <button onClick={() => setHorizon('10y')} aria-label="Ver proyección a 10 años" className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${horizon === '10y' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-400'}`}>10 Años</button>
                 </div>
             </div>
 
@@ -296,6 +296,7 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                                                 onClick={() => handlePlanItem(a)}
                                                 className="p-1 px-2 bg-blue-500/10 text-blue-600 rounded-lg text-[8px] font-black uppercase opacity-0 group-hover:opacity-100 transition-all hover:bg-blue-600 hover:text-white"
                                                 title="Planificar Cobro/Pago"
+                                                aria-label={`Planificar ${isDebt ? 'pago' : 'cobro'} de ${a.name}`}
                                             >
                                                 Planear
                                             </button>
@@ -316,9 +317,10 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Planes de Validación</h3>
                             <button
                                 onClick={() => setModalData({ type: 'purchase', amount: 0, startMonth: 1 })}
+                                aria-label="Agregar nuevo plan de gasto"
                                 className="w-6 h-6 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:scale-110 transition-all"
                             >
-                                <Plus size={14} strokeWidth={3} />
+                                <Plus size={14} strokeWidth={3} aria-hidden="true" />
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
@@ -329,7 +331,7 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                                             <span className="text-[9px] font-black text-slate-400 uppercase mb-0.5">{s.type === 'purchase' ? 'Gasto Planificado' : s.type === 'income_change' ? 'Ingreso Planificado' : 'Ahorro Extra'}</span>
                                             <span className="text-xs font-black text-slate-800 dark:text-white">{s.name}</span>
                                         </div>
-                                        <button onClick={() => setScenarios(scenarios.filter(sc => sc.id !== s.id))} className="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 absolute top-3 right-3"><Trash2 size={12} /></button>
+                                        <button onClick={() => setScenarios(scenarios.filter(sc => sc.id !== s.id))} className="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 absolute top-3 right-3" aria-label={`Eliminar plan ${s.name}`}><Trash2 size={12} aria-hidden="true" /></button>
                                     </div>
                                     <div className="flex justify-between items-center mt-1">
                                         <span className={`text-[10px] font-black ${s.type === 'purchase' ? 'text-rose-500' : 'text-emerald-500'}`}>{formatCurrency(s.amount)}</span>
@@ -345,7 +347,7 @@ export default function ProjectionsView({ transactions, accounts, categories }: 
                     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                         <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Deudas Fijas / Cuotas</h3>
-                            <button onClick={() => setShowInstallmentModal(true)} className="w-6 h-6 bg-rose-500 text-white rounded-lg flex items-center justify-center hover:scale-110 transition-all"><Plus size={14} strokeWidth={3} /></button>
+                            <button onClick={() => setShowInstallmentModal(true)} aria-label="Registrar nueva deuda" className="w-6 h-6 bg-rose-500 text-white rounded-lg flex items-center justify-center hover:scale-110 transition-all"><Plus size={14} strokeWidth={3} aria-hidden="true" /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
                             {installments.map(i => (

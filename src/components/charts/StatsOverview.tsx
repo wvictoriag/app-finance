@@ -69,13 +69,13 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ transactions, cate
 
     return (
         <div className="p-6 h-full overflow-y-auto space-y-8 scrollbar-hide pb-24">
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter mb-6">Estadísticas Financieras</h2>
+            <h2 className="fluid-text-2xl font-black text-slate-900 dark:text-white tracking-tighter mb-6 uppercase">Estadísticas Financieras</h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Gastos por Categoría */}
                 <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm">
-                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Gastos por Categoría</h3>
+                    <h3 className="fluid-text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Gastos por Categoría</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -87,6 +87,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ transactions, cate
                                     outerRadius={80}
                                     paddingAngle={5}
                                     dataKey="value"
+                                    aria-label="Gráfico circular de gastos por categoría"
                                 >
                                     {categoryData.map((_, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -104,7 +105,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ transactions, cate
 
                 {/* Ingresos vs Gastos */}
                 <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm">
-                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Flujo de Caja Mensual</h3>
+                    <h3 className="fluid-text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Flujo de Caja Mensual</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={monthlyTrend}>

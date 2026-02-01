@@ -42,25 +42,27 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center mb-4 px-1 pt-4">
+            <div className="flex justify-between items-center mb-4 px-0 pb-2 border-b border-slate-50 dark:border-white/5">
                 <div className="pl-6">
-                    <h2 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Ejecución</h2>
+                    <h2 className="fluid-text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Ejecución</h2>
                     <div className="flex items-center gap-2">
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Control Mensual</p>
+                        <p className="fluid-text-xs text-slate-500 font-bold uppercase tracking-wider">Control Mensual</p>
                         <div className="flex items-center gap-1 print:hidden">
                             <button
                                 onClick={() => setShowChart(!showChart)}
-                                className="p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-all text-slate-400"
+                                className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-all text-slate-400 touch-target-sm flex items-center justify-center"
                                 title={showChart ? "Ver Lista" : "Ver Gráfico"}
+                                aria-label={showChart ? "Cambiar a vista de lista" : "Cambiar a vista de gráfico"}
                             >
-                                {showChart ? <List size={14} /> : <PieIcon size={14} />}
+                                {showChart ? <List size={14} aria-hidden="true" /> : <PieIcon size={14} aria-hidden="true" />}
                             </button>
                             <button
                                 onClick={handleExportPDF}
-                                className="p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-all text-slate-400"
-                                title="Exportar PDF"
+                                className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md transition-all text-slate-400 touch-target-sm flex items-center justify-center"
+                                title="Exportar PDF/Imprimir"
+                                aria-label="Exportar este reporte a PDF o Imprimir"
                             >
-                                <FileText size={14} />
+                                <FileText size={14} aria-hidden="true" />
                             </button>
                         </div>
                     </div>
@@ -68,20 +70,22 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
                 <div className="flex items-center gap-4 bg-slate-50/50 dark:bg-white/5 p-1 rounded-2xl mr-6">
                     <button
                         onClick={() => setSelectedDate(subMonths(selectedDate, 1))}
-                        className="p-2 hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        className="p-2 hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-slate-900 dark:hover:text-white touch-target-sm flex items-center justify-center"
                         title="Mes anterior"
+                        aria-label="Ver mes anterior"
                     >
-                        <ChevronLeft className="w-4 h-4" />
+                        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                     </button>
-                    <span className="text-xs font-black px-2 py-1 text-slate-900 dark:text-white min-w-[140px] text-center uppercase tracking-[0.2em]">
+                    <span className="fluid-text-xs font-black px-2 py-1 text-slate-900 dark:text-white min-w-[140px] text-center uppercase tracking-[0.2em]">
                         {format(selectedDate, 'MMMM yyyy', { locale: es })}
                     </span>
                     <button
                         onClick={() => setSelectedDate(addMonths(selectedDate, 1))}
-                        className="p-2 hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        className="p-2 hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-slate-900 dark:hover:text-white touch-target-sm flex items-center justify-center"
                         title="Mes siguiente"
+                        aria-label="Ver mes siguiente"
                     >
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-4 h-4" aria-hidden="true" />
                     </button>
                 </div>
             </div>
@@ -93,13 +97,13 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
                         <CardSkeleton />
                     </div>
                 ) : showChart && (
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-slate-50/50 dark:bg-white/5 rounded-3xl p-4 border border-slate-100 dark:border-white/5">
-                            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Distribución de Gastos</h4>
+                            <h4 className="fluid-text-2xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Distribución de Gastos</h4>
                             <CategoryChart items={monthlyControl} />
                         </div>
                         <div className="bg-slate-50/50 dark:bg-white/5 rounded-3xl p-4 border border-slate-100 dark:border-white/5">
-                            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Resumen Flujo</h4>
+                            <h4 className="fluid-text-2xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Resumen Flujo</h4>
                             <CashFlowSummary items={monthlyControl} />
                         </div>
                     </div>
@@ -119,14 +123,19 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
                             <div
                                 onClick={() => toggleGroup(groupType)}
                                 className="flex items-center justify-between cursor-pointer group"
+                                role="button"
+                                aria-expanded={isExpanded}
+                                aria-label={`Contraer/Expandir grupo ${groupType}`}
+                                tabIndex={0}
+                                onKeyDown={(e) => e.key === 'Enter' && toggleGroup(groupType)}
                             >
                                 <div className="flex items-center gap-4">
-                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors">{groupType}</h3>
-                                    <div className={`text-xs font-black tabular-nums transition-all ${totalReal >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    <h3 className="fluid-text-xs font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors uppercase tracking-[0.2em]">{groupType}</h3>
+                                    <div className={`fluid-text-sm font-black tabular-nums transition-all ${totalReal >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
                                         {formatCurrency(totalReal)}
                                     </div>
                                 </div>
-                                <div className={`w-2 h-2 rounded-full transition-all ${isExpanded ? 'bg-accent-primary scale-125' : 'bg-slate-200 dark:bg-white/10'}`}></div>
+                                <div className={`w-2 h-2 rounded-full transition-all ${isExpanded ? 'bg-accent-primary scale-125' : 'bg-slate-200 dark:bg-white/10'}`} aria-hidden="true"></div>
                             </div>
 
                             {isExpanded && (
@@ -147,29 +156,29 @@ const MonthlyControlComponent: React.FC<MonthlyControlProps> = () => {
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 mb-0.5">
-                                                            <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</p>
+                                                            <p className="fluid-text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</p>
                                                             {percent > 100 && (
                                                                 <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 animate-bounce">
                                                                     <AlertTriangle size={12} strokeWidth={3} />
-                                                                    <span className="text-[8px] font-black uppercase tracking-tighter">Excedido</span>
+                                                                    <span className="fluid-text-2xs font-black uppercase tracking-tighter">Excedido</span>
                                                                 </div>
                                                             )}
                                                             {percent > 90 && percent <= 100 && (
                                                                 <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400">
                                                                     <AlertCircle size={12} strokeWidth={3} />
-                                                                    <span className="text-[8px] font-black uppercase tracking-tighter">Límite</span>
+                                                                    <span className="fluid-text-2xs font-black uppercase tracking-tighter">Límite</span>
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <span className={`text-[10px] font-bold ${real > budget ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                        <span className={`fluid-text-2xs font-bold ${real > budget ? 'text-rose-500' : 'text-slate-400'}`}>
                                                             {formatCurrency(real)} / {formatCurrency(budget)}
                                                         </span>
                                                     </div>
                                                     <div className="text-right shrink-0 ml-4">
-                                                        <p className={`text-sm font-black tabular-nums ${real > budget ? 'text-rose-500' : 'text-slate-900 dark:text-white'}`}>
+                                                        <p className={`fluid-text-sm font-black tabular-nums ${real > budget ? 'text-rose-500' : 'text-slate-900 dark:text-white'}`}>
                                                             {formatCurrency(item.real)}
                                                         </p>
-                                                        <p className={`text-[10px] font-black uppercase tracking-widest ${percent > 100 ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                        <p className={`fluid-text-2xs font-black uppercase tracking-widest ${percent > 100 ? 'text-rose-500' : 'text-slate-400'}`}>
                                                             {Math.round(percent)}%
                                                         </p>
                                                     </div>

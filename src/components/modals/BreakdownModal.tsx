@@ -32,7 +32,7 @@ export function BreakdownModal({ isOpen, onClose, data }: BreakdownModalProps) {
                 <div className="bg-blue-600 p-8 text-white relative">
                     <button
                         onClick={onClose}
-                        className="absolute top-6 right-6 p-2 hover:bg-white/20 rounded-full transition-colors"
+                        className="absolute top-6 right-6 p-2 hover:bg-white/20 rounded-full transition-colors touch-target-sm flex items-center justify-center"
                         aria-label="Cerrar ventana"
                     >
                         <X size={20} />
@@ -41,9 +41,9 @@ export function BreakdownModal({ isOpen, onClose, data }: BreakdownModalProps) {
                         <div className="bg-white/20 p-2 rounded-xl" aria-hidden="true">
                             <ShieldCheck size={24} />
                         </div>
-                        <h3 id="modal-title" className="text-xl font-black tracking-tight">Tu Patrimonio Rico</h3>
+                        <h3 id="modal-title" className="fluid-text-xl font-black tracking-tight">Tu Patrimonio Rico</h3>
                     </div>
-                    <p className="text-blue-100 text-sm font-medium opacity-80">Desglose detallado de tu valor neto actual.</p>
+                    <p className="text-blue-100 fluid-text-xs font-medium opacity-80">Desglose detallado de tu valor neto actual.</p>
                 </div>
 
                 {/* Content */}
@@ -53,9 +53,9 @@ export function BreakdownModal({ isOpen, onClose, data }: BreakdownModalProps) {
                         <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-2xl">
                             <div className="flex items-center gap-3">
                                 <Landmark className="text-slate-400" size={18} />
-                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Cuentas y Cajas</span>
+                                <span className="fluid-text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">Cuentas y Cajas</span>
                             </div>
-                            <span className="text-sm font-black text-slate-900 dark:text-white">
+                            <span className="fluid-text-sm font-black text-slate-900 dark:text-white tabular-nums">
                                 {formatCurrency(data.liquid)}
                             </span>
                         </div>
@@ -64,9 +64,9 @@ export function BreakdownModal({ isOpen, onClose, data }: BreakdownModalProps) {
                         <div className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
                             <div className="flex items-center gap-3">
                                 <Receipt className="text-emerald-500" size={18} />
-                                <span className="text-sm font-bold text-emerald-600">Saldos por Cobrar</span>
+                                <span className="fluid-text-xs font-black text-emerald-600 uppercase tracking-widest">Saldos por Cobrar</span>
                             </div>
-                            <span className="text-sm font-black text-emerald-600">
+                            <span className="fluid-text-sm font-black text-emerald-600 tabular-nums">
                                 {formatCurrency(data.receivable)}
                             </span>
                         </div>
@@ -75,9 +75,9 @@ export function BreakdownModal({ isOpen, onClose, data }: BreakdownModalProps) {
                         <div className="flex items-center justify-between p-4 bg-rose-500/5 rounded-2xl border border-rose-500/10">
                             <div className="flex items-center gap-3">
                                 <CreditCard className="text-rose-500" size={18} />
-                                <span className="text-sm font-bold text-rose-500">Deudas y Créditos</span>
+                                <span className="fluid-text-xs font-black text-rose-500 uppercase tracking-widest">Deudas y Créditos</span>
                             </div>
-                            <span className="text-sm font-black text-rose-600">
+                            <span className="fluid-text-sm font-black text-rose-600 tabular-nums">
                                 {formatCurrency(data.debt)}
                             </span>
                         </div>
@@ -85,15 +85,15 @@ export function BreakdownModal({ isOpen, onClose, data }: BreakdownModalProps) {
 
                     {/* Total */}
                     <div className="pt-6 border-t border-slate-100 dark:border-white/5 flex flex-col items-center">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor Total Real</span>
-                        <div className="text-3xl font-black text-blue-600 tracking-tighter">
+                        <span className="fluid-text-2xs font-black text-slate-400 uppercase tracking-widest mb-1">Valor Total Real</span>
+                        <div className="fluid-text-3xl font-black text-blue-600 tracking-tighter tabular-nums">
                             {formatCurrency(data.total)}
                         </div>
                     </div>
 
                     <button
                         onClick={onClose}
-                        className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] transition-all active:scale-[0.98]"
+                        className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest fluid-text-xs hover:scale-[1.02] transition-all active:scale-[0.98] touch-target"
                     >
                         Entendido
                     </button>

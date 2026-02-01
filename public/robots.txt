@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /api/
+Allow: /
+
+Sitemap: https://app-finance-ivory.vercel.app/sitemap.xml

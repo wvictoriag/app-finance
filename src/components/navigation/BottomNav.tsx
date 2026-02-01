@@ -14,7 +14,7 @@ export function BottomNav() {
     ];
 
     return (
-        <nav className="bottom-nav">
+        <nav className="bottom-nav safe-area-bottom !px-8">
             {items.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentView === item.id;
@@ -22,10 +22,11 @@ export function BottomNav() {
                     <button
                         key={item.id}
                         onClick={() => setCurrentView(item.id)}
-                        className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-blue-600 scale-110' : 'text-slate-400 opacity-60'}`}
+                        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 touch-target ${isActive ? 'text-blue-600 scale-110' : 'text-slate-400 opacity-60'}`}
+                        aria-label={`Ir a vista de ${item.label}`}
                     >
-                        <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                        <span className={`text-[9px] font-black uppercase tracking-tighter ${isActive ? 'opacity-100' : 'opacity-0'}`}>
+                        <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                        <span className={`fluid-text-2xs font-black uppercase tracking-tighter ${isActive ? 'opacity-100' : 'opacity-0'}`}>
                             {item.label}
                         </span>
                     </button>

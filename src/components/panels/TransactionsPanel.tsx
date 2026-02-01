@@ -85,23 +85,23 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                 <div className="flex justify-between items-center mb-6 px-1">
                     <div>
                         <div className="flex items-center gap-2 mb-0.5">
-                            <h2 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em]">Movimientos</h2>
+                            <h2 className="fluid-text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Movimientos</h2>
                             {selectedAccount && (
                                 <div className="flex items-center gap-1.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">
-                                    <span className="text-[9px] font-black uppercase tracking-tighter shrink-0">Filtrado por: {selectedAccount.name}</span>
-                                    <button onClick={(e) => { e.stopPropagation(); onClearAccountFilter?.(); }} className="hover:text-blue-600 dark:hover:text-blue-300">
+                                    <span className="fluid-text-2xs font-black uppercase tracking-tighter shrink-0">Filtrado por: {selectedAccount.name}</span>
+                                    <button onClick={(e) => { e.stopPropagation(); onClearAccountFilter?.(); }} className="hover:text-blue-600 dark:hover:text-blue-300 touch-target-sm flex items-center justify-center p-1" aria-label="Quitar filtro de cuenta">
                                         <X size={10} />
                                     </button>
                                 </div>
                             )}
                         </div>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{selectedAccount ? 'Mostrando historial de cuenta' : 'Historial Reciente'}</p>
+                        <p className="fluid-text-xs text-slate-500 font-bold uppercase tracking-wider">{selectedAccount ? 'Mostrando historial de cuenta' : 'Historial Reciente'}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         {selectedIds.length > 0 && (
                             <button
                                 onClick={handleBulkDelete}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg transition-all text-[10px] font-black uppercase tracking-widest"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg transition-all fluid-text-2xs font-black uppercase tracking-widest touch-target-sm"
                             >
                                 <Trash2 size={12} />
                                 Borrar ({selectedIds.length})
@@ -109,7 +109,7 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                         )}
                         <button
                             onClick={() => exportTransactionsToCSV(transactions)}
-                            className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
+                            className="p-2 text-slate-400 hover:text-emerald-500 transition-colors touch-target-sm flex items-center justify-center"
                             title="Exportar a CSV"
                         >
                             <Download size={16} />
@@ -122,9 +122,9 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                         type="checkbox"
                         checked={transactions.length > 0 && selectedIds.length === transactions.length}
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 touch-target-sm"
                     />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Seleccionar Todo</span>
+                    <span className="fluid-text-xs font-black text-slate-400 uppercase tracking-widest">Seleccionar Todo</span>
                 </div>
 
                 <div className="flex gap-2">
@@ -134,17 +134,19 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                             placeholder="Buscar..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-all font-medium"
+                            className="w-full pl-10 pr-4 py-2.5 fluid-text-sm rounded-xl bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-all font-medium"
                         />
                         <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-300 dark:text-slate-600 group-focus-within:text-accent-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </div>
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center relative ${showFilters || activeFiltersCount > 0 ? 'bg-accent-primary text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center relative touch-target-sm ${showFilters || activeFiltersCount > 0 ? 'bg-accent-primary text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+                        aria-label="Abrir filtros avanzados"
+                        title="Filtros avanzados"
                     >
                         <Filter size={18} />
                         {activeFiltersCount > 0 && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] font-bold flex items-center justify-center border-2 border-white dark:border-slate-900">
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full fluid-text-2xs font-bold flex items-center justify-center border-2 border-white dark:border-slate-900">
                                 {activeFiltersCount}
                             </div>
                         )}
@@ -155,9 +157,9 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                 {showFilters && (
                     <div className="mt-4 p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4 animate-in slide-in-from-top-2 duration-200">
                         <div className="flex justify-between items-center">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filtros Avanzados</h3>
+                            <h3 className="fluid-text-xs font-black uppercase tracking-widest text-slate-400">Filtros Avanzados</h3>
                             {activeFiltersCount > 0 && (
-                                <button onClick={clearFilters} className="text-[10px] font-bold text-rose-500 hover:text-rose-600">
+                                <button onClick={clearFilters} className="fluid-text-xs font-bold text-rose-500 hover:text-rose-600 touch-target-sm">
                                     Limpiar Todo
                                 </button>
                             )}
@@ -226,7 +228,7 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                         <button
                             key={type}
                             onClick={() => setFilterType(type)}
-                            className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all ${filterType === type
+                            className={`fluid-text-xs font-black uppercase tracking-[0.2em] transition-all touch-target-sm ${filterType === type
                                 ? 'text-accent-primary'
                                 : 'text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400'
                                 }`}
@@ -278,7 +280,7 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                     />
                                     <div className={`w-1 h-5 md:h-6 rounded-full shrink-0 ${statusColor}`}></div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="font-bold text-slate-900 dark:text-white text-xs md:text-sm truncate flex items-center gap-2">
+                                        <div className="font-bold text-slate-900 dark:text-white fluid-text-sm truncate flex items-center gap-2">
                                             <span className="truncate">
                                                 {isTransfer ? (
                                                     tx.description || 'Transferencia'
@@ -295,7 +297,7 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                                                 e.stopPropagation();
                                                                 setSearchQuery(tag);
                                                             }}
-                                                            className="px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8px] font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                                            className="px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 fluid-text-2xs font-black uppercase tracking-tighter hover:bg-blue-500 hover:text-white transition-all shadow-sm touch-target-sm"
                                                         >
                                                             #{tag}
                                                         </button>
@@ -303,7 +305,7 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1 md:gap-2 mt-0.5">
+                                        <div className="fluid-text-2xs font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1 md:gap-2 mt-0.5">
                                             <span className="truncate flex-1 min-w-0">
                                                 {isTransfer ? (
                                                     <span className="flex items-center gap-1">
@@ -320,12 +322,12 @@ const TransactionsPanelComponent: React.FC<TransactionsPanelProps> = ({
                                 </div>
 
                                 <div className="flex items-center gap-2 md:gap-4 shrink-0 ml-4">
-                                    <div className={`font-black text-[10px] md:text-xs tabular-nums text-right min-w-[70px] md:min-w-[100px] ${amountColor}`}>
+                                    <div className={`font-black fluid-text-xs tabular-nums text-right min-w-[70px] md:min-w-[100px] ${amountColor}`}>
                                         {formatCurrency(displayAmount)}
                                     </div>
-                                    <div className="flex items-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-all scale-90 md:scale-95 group-hover:scale-100">
-                                        <button onClick={() => onEdit(tx)} className="p-1 md:p-1.5 text-slate-300 hover:text-slate-600 dark:hover:text-white transition-colors"><Pencil size={12} /></button>
-                                        <button onClick={() => onDelete(tx.id)} className="p-1 md:p-1.5 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={12} /></button>
+                                    <div className="flex items-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                        <button onClick={() => onEdit(tx)} className="p-2 text-slate-300 hover:text-slate-600 dark:hover:text-white transition-colors touch-target-sm" aria-label={`Editar transacción: ${tx.description}`}><Pencil size={12} /></button>
+                                        <button onClick={() => onDelete(tx.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors touch-target-sm" aria-label={`Eliminar transacción: ${tx.description}`}><Trash2 size={12} /></button>
                                     </div>
                                 </div>
                             </div>

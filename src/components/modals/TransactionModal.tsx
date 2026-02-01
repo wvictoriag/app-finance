@@ -35,6 +35,30 @@ export function TransactionModal({
 
     const txType = watch('type');
 
+    // Reset category if it doesn't match the new transaction type
+    useEffect(() => {
+        const subscription = watch((value, { name }) => {
+            if (name === 'type') {
+                const currentCatId = value.category_id;
+                if (!currentCatId) return;
+
+                const category = categories.find(c => c.id === currentCatId);
+                if (category) {
+                    const isIncome = value.type === 'income';
+                    // If switching to income but category is for expenses, clear it
+                    if (isIncome && category.type !== 'Ingresos') {
+                        reset({ ...value, category_id: '' });
+                    }
+                    // If switching to expense but category is for income, clear it
+                    else if (!isIncome && category.type === 'Ingresos') {
+                        reset({ ...value, category_id: '' });
+                    }
+                }
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [watch, categories, reset]);
+
     useEffect(() => {
         if (editingTransaction) {
             let type: 'income' | 'expense' | 'transfer' = 'expense';

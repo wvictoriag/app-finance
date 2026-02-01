@@ -55,11 +55,12 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
     return (
         <div className="h-full flex flex-col overflow-hidden p-2 lg:p-4">
             <div className="flex justify-between items-center mb-4 px-1">
-                <h2 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Cuentas</h2>
+                <h2 className="fluid-text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Cuentas</h2>
                 <button
                     onClick={onAddAccount}
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors touch-target-sm"
                     title="Agregar Cuenta"
+                    aria-label="Agregar nueva cuenta financiera"
                 >
                     <Plus className="w-5 h-5" />
                 </button>
@@ -155,26 +156,26 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
                                     <div className="flex flex-col min-w-0 flex-1">
                                         <div className="flex items-center gap-2 mb-0.5 md:mb-1">
                                             <div className="bg-blue-600 dark:bg-blue-500 px-1.5 md:px-2 py-0.5 rounded-md shrink-0">
-                                                <span className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-widest">{typeTag}</span>
+                                                <span className="fluid-text-2xs font-black text-white uppercase tracking-widest">{typeTag}</span>
                                             </div>
-                                            <h3 className="font-black text-slate-900 dark:text-white text-xs md:text-sm lg:text-base tracking-tight truncate">
+                                            <h3 className="font-black text-slate-900 dark:text-white fluid-text-sm tracking-tight truncate">
                                                 {acc.name}
                                             </h3>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-[120px] md:max-w-[150px]">
+                                            <span className="fluid-text-2xs font-bold text-slate-400 uppercase tracking-tight truncate max-w-[120px] md:max-w-[150px]">
                                                 {mainLabel} {acc.account_number && `• ${acc.account_number}`}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end shrink-0 ml-2 md:ml-4">
-                                        <div className={`text-sm md:text-base lg:text-lg font-black tracking-tighter whitespace-nowrap ${(isCreditLine && (Number(acc.credit_limit || 0) + Number(acc.balance)) < 0) ||
+                                        <div className={`fluid-text-lg font-black tracking-tighter whitespace-nowrap ${(isCreditLine && (Number(acc.credit_limit || 0) + Number(acc.balance)) < 0) ||
                                             (isCreditCard && Number(acc.balance) < 0) ? 'text-rose-500' : 'text-slate-900 dark:text-white'
                                             }`}>
                                             {formatCurrency(amountValue)}
                                         </div>
                                         {subInfo && (
-                                            <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-0.5 md:mt-1">
+                                            <span className="fluid-text-2xs font-black text-slate-400 uppercase tracking-tighter mt-0.5 md:mt-1">
                                                 {subInfo}
                                             </span>
                                         )}
@@ -187,44 +188,47 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
                                             <div className="flex items-center gap-1.5 md:gap-2">
                                                 <div className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 md:px-2 py-0.5 rounded-full">
                                                     <AlertCircle size={10} strokeWidth={3} />
-                                                    <span className="text-[7px] md:text-[9px] font-black uppercase tracking-tighter">Descuadrada</span>
+                                                    <span className="fluid-text-2xs font-black uppercase tracking-tighter">Descuadrada</span>
                                                 </div>
-                                                <span className="text-[8px] md:text-[10px] font-black text-amber-600 dark:text-amber-500">
+                                                <span className="fluid-text-2xs font-black text-amber-600 dark:text-amber-500">
                                                     Dif: {formatCurrency(diff)}
                                                 </span>
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-1 md:gap-1.5 text-emerald-500">
                                                 <CheckCircle2 size={12} strokeWidth={3} />
-                                                <span className="text-[7px] md:text-[9px] font-black uppercase tracking-tighter">Cuadrada</span>
+                                                <span className="fluid-text-2xs font-black uppercase tracking-tighter">Cuadrada</span>
                                             </div>
                                         )}
-                                        <span className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 md:mt-1">
+                                        <span className="fluid-text-2xs font-bold text-slate-400 uppercase tracking-tighter mt-0.5 md:mt-1">
                                             {acc.last_update ? `Actualizado: ${formatDate(acc.last_update)}` : 'Sin fecha'}
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center gap-1 md:gap-1.5 opacity-0 group-hover:opacity-100 transition-all scale-90 md:scale-95 group-hover:scale-100">
+                                    <div className="flex items-center gap-1.5 md:gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onReconcile(acc); }}
-                                            className="p-1.5 md:p-2 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white rounded-lg transition-all"
+                                            className="p-2 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white rounded-lg transition-all touch-target-sm"
                                             title="Reconciliar Saldo Real"
+                                            aria-label={`Reconciliar saldo para cuenta ${acc.name}`}
                                         >
-                                            <Scale size={14} />
+                                            <Scale size={16} />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onEditAccount(acc); }}
-                                            className="p-1.5 md:p-2 bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-blue-500 rounded-lg transition-all"
+                                            className="p-2 bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-blue-500 rounded-lg transition-all touch-target-sm"
                                             title="Editar Cuenta"
+                                            aria-label={`Editar detalles de cuenta ${acc.name}`}
                                         >
-                                            <Pencil size={14} />
+                                            <Pencil size={16} />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onDeleteAccount(acc.id); }}
-                                            className="p-1.5 md:p-2 bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-rose-500 rounded-lg transition-all"
+                                            className="p-2 bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-rose-500 rounded-lg transition-all touch-target-sm"
                                             title="Eliminar Cuenta"
+                                            aria-label={`Eliminar cuenta ${acc.name} y todas sus transacciones`}
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 </div>
@@ -241,11 +245,11 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 rounded-full bg-accent-primary/5 blur-2xl transition-all"></div>
 
                 <div className="flex items-center gap-2 mb-1 relative z-10">
-                    <span className="text-[9px] md:text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Total Patrimonio</span>
+                    <span className="fluid-text-xs font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Total Patrimonio</span>
                     <Info size={12} className="text-blue-600" />
                 </div>
 
-                <div className="text-xl md:text-2xl lg:text-3xl font-black tracking-tighter relative z-10 text-slate-900 dark:text-white leading-none">
+                <div className="fluid-text-3xl font-black tracking-tighter relative z-10 text-slate-900 dark:text-white leading-none">
                     {formatCurrency(totalEquity)}
                 </div>
             </div>

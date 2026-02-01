@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { formatCurrency } from '../../utils/formatters';
 import type { Account } from '../../types';
 import { useAccounts } from '../../hooks/useAccounts';
+import { useDashboard } from '../../contexts/DashboardContext';
 import toast from 'react-hot-toast';
 
 interface ReconcileModalProps {
@@ -16,6 +17,7 @@ export function ReconcileModal({
     account
 }: ReconcileModalProps) {
     const { updateAccount } = useAccounts();
+    const { transactionSums } = useDashboard();
     const [reconcileValue, setReconcileValue] = useState<string>('');
 
     useEffect(() => {
@@ -29,11 +31,18 @@ export function ReconcileModal({
     const handleReconcile = async () => {
         if (reconcileValue === '') return;
         try {
+            const newBalance = Number(reconcileValue);
+            const currentSums = transactionSums?.[account.id] || 0;
+            const newInitial = newBalance - currentSums;
+
             await updateAccount({
                 id: account.id,
-                updates: { balance: Number(reconcileValue) } as any
+                updates: {
+                    balance: newBalance,
+                    initial_balance: newInitial
+                } as any
             });
-            toast.success('Saldo reconciliado');
+            toast.success('Saldo reconciliado y cuenta cuadrada');
             onClose();
         } catch (err: any) {
             toast.error(err.message || 'Error al reconciliar');

@@ -1,17 +1,41 @@
 {
     "name": "Guapacha Finance",
     "short_name": "Guapacha",
-    "description": "Control de finanzas personales inteligente",
+    "description": "Control de finanzas personales inteligente. Gestiona tus cuentas, transacciones y proyecciones financieras.",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
+    "orientation": "any",
     "background_color": "#ffffff",
     "theme_color": "#4f46e5",
+    "categories": [
+        "finance",
+        "productivity"
+    ],
+    "lang": "es",
+    "dir": "ltr",
     "icons": [
         {
-            "src": "https://cdn-icons-png.flaticon.com/512/2821/2821869.png",
+            "src": "/icons/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-256.png",
+            "sizes": "256x256",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
         }
+    ],
+    "display_override": [
+        "standalone",
+        "minimal-ui"
     ]
 }

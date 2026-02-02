@@ -23,7 +23,7 @@ export const CashFlowSummary: React.FC<CashFlowSummaryProps> = ({ items }) => {
 
     return (
         <div className="h-48 w-full mt-4">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart data={data} layout="vertical" margin={{ left: -20, right: 20 }}>
                     <XAxis type="number" hide />
                     <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} />

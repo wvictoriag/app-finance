@@ -368,9 +368,7 @@ function DashboardContent() {
                                             />
                                         </Suspense>
                                     </ErrorBoundary>
-                                    <button onClick={handleAddTransaction} aria-label="Agregar nueva transacción" className="fixed lg:absolute bottom-28 lg:bottom-10 right-6 lg:right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30">
-                                        <Plus size={32} strokeWidth={3} aria-hidden="true" />
-                                    </button>
+
                                 </div>
                             </motion.div>
                         ) : currentView === 'projections' ? (
@@ -511,8 +509,17 @@ function DashboardContent() {
                 </Suspense>
             </ErrorBoundary>
 
-            {/* Mobile Bottom Navigation */}
+            {/* Bottom Navigation */}
             <BottomNav />
+
+            {/* Magic Button (Global) */}
+            <button
+                onClick={handleAddTransaction}
+                aria-label="Agregar nueva transacción"
+                className="fixed bottom-28 lg:bottom-10 right-6 lg:right-10 h-16 w-16 bg-accent-primary text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[100]"
+            >
+                <Plus size={32} strokeWidth={3} aria-hidden="true" />
+            </button>
 
             {/* PWA Install Prompt */}
             <PWAInstallPrompt />

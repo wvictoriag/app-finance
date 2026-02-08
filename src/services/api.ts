@@ -23,11 +23,10 @@ export const api = {
     },
 
     updateAccount: async (id: string, updates: Partial<Account>): Promise<Account[]> => {
-        const now = new Date().toISOString();
-        logger.info(`[API] Updating account ${id} with last_update: ${now}`);
+        logger.info(`[API] Updating account ${id}`, updates);
         const { data, error } = await supabase
             .from('accounts')
-            .update({ ...updates, last_update: now })
+            .update(updates)
             .eq('id', id)
             .select();
         if (error) {
@@ -118,14 +117,9 @@ export const api = {
 
         if (error) throw error;
 
-        // Force update last_update on account using transaction date
-        const updateDate = transaction.date || new Date().toISOString();
-        if (transaction.account_id) {
-            await supabase.from('accounts').update({ last_update: updateDate }).eq('id', transaction.account_id);
-        }
-        if (transaction.destination_account_id) {
-            await supabase.from('accounts').update({ last_update: updateDate }).eq('id', transaction.destination_account_id);
-        }
+        // Sync metadata for affected accounts
+        if (transaction.account_id) await api.syncAccountMetadata(transaction.account_id);
+        if (transaction.destination_account_id) await api.syncAccountMetadata(transaction.destination_account_id);
 
         return data || [];
     },
@@ -140,14 +134,9 @@ export const api = {
 
         if (error) throw error;
 
-        // Force update last_update on account
-        const updateDate = data?.[0]?.date || new Date().toISOString();
-        if (data?.[0]?.account_id) {
-            await supabase.from('accounts').update({ last_update: updateDate }).eq('id', data[0].account_id);
-        }
-        if (data?.[0]?.destination_account_id) {
-            await supabase.from('accounts').update({ last_update: updateDate }).eq('id', data[0].destination_account_id);
-        }
+        // Sync metadata
+        if (data?.[0]?.account_id) await api.syncAccountMetadata(data[0].account_id);
+        if (data?.[0]?.destination_account_id) await api.syncAccountMetadata(data[0].destination_account_id);
 
         return data || [];
     },
@@ -163,13 +152,9 @@ export const api = {
 
         if (error) throw error;
 
-        // Update accounts metadata
-        if (tx?.account_id) {
-            await supabase.from('accounts').update({ last_update: new Date().toISOString() }).eq('id', tx.account_id);
-        }
-        if (tx?.destination_account_id) {
-            await supabase.from('accounts').update({ last_update: new Date().toISOString() }).eq('id', tx.destination_account_id);
-        }
+        // Sync metadata
+        if (tx?.account_id) await api.syncAccountMetadata(tx.account_id);
+        if (tx?.destination_account_id) await api.syncAccountMetadata(tx.destination_account_id);
 
         return true;
     },
@@ -193,9 +178,11 @@ export const api = {
         });
 
         // Update all unique affected accounts
-        const now = new Date().toISOString();
+        if (error) throw error;
+
+        // Update all unique affected accounts
         for (const accountId of affectedAccounts) {
-            await supabase.from('accounts').update({ last_update: now }).eq('id', accountId);
+            await api.syncAccountMetadata(accountId);
         }
 
         return true;
@@ -236,5 +223,31 @@ export const api = {
             }
         });
         return sums;
+    },
+
+    syncAccountMetadata: async (accountId: string): Promise<void> => {
+        try {
+            // Find latest transaction date for this account
+            const { data: latestTx, error: txError } = await supabase
+                .from('transactions')
+                .select('date')
+                .or(`account_id.eq.${accountId},destination_account_id.eq.${accountId}`)
+                .order('date', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (txError) throw txError;
+
+            const lastUpdate = latestTx?.date || new Date().toISOString();
+
+            await supabase
+                .from('accounts')
+                .update({ last_update: lastUpdate })
+                .eq('id', accountId);
+
+            logger.info(`[API] Synced metadata for account ${accountId}. Last update: ${lastUpdate}`);
+        } catch (err) {
+            logger.error(`[API] Error syncing account metadata:`, err);
+        }
     }
 };

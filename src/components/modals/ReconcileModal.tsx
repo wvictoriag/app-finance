@@ -32,14 +32,11 @@ export function ReconcileModal({
         if (reconcileValue === '') return;
         try {
             const newBalance = Number(reconcileValue);
-            const currentSums = transactionSums?.[account.id] || 0;
-            const newInitial = newBalance - currentSums;
 
             await updateAccount({
                 id: account.id,
                 updates: {
-                    balance: newBalance,
-                    initial_balance: newInitial
+                    balance: newBalance
                 } as any
             });
             toast.success('Saldo reconciliado y cuenta cuadrada');

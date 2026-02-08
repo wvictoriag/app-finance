@@ -191,7 +191,7 @@ const AccountsPanelComponent: React.FC<AccountsPanelProps> = ({
                                                     <span className="fluid-text-2xs font-black uppercase tracking-tighter">Descuadrada</span>
                                                 </div>
                                                 <span className="fluid-text-2xs font-black text-amber-600 dark:text-amber-500">
-                                                    Dif: {formatCurrency(diff)}
+                                                    {diff > 0 ? 'Sobran: ' : 'Faltan: '}{formatCurrency(Math.abs(diff))}
                                                 </span>
                                             </div>
                                         ) : (
